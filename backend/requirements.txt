@@ -1,0 +1,27 @@
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+scikit-learn>=1.4.0
+numpy>=1.26.0
+pandas>=2.1.3
+python-multipart>=0.0.6
+joblib>=1.3.2
+google-api-python-client>=2.100.0
+google-auth-httplib2>=0.1.1
+google-auth-oauthlib>=1.1.0
+msal>=1.24.0
+requests>=2.31.0
+aiofiles>=23.2.1
+transformers>=4.35.0
+torch>=2.1.0
+sentencepiece>=0.1.99
+openai>=1.0.0
+python-dotenv>=1.0.0
+bcrypt>=4.0.1
+PyJWT>=2.8.0
+email-validator>=2.0.0
+textblob>=0.17.1
+datasets>=2.14.0
+# pin accelerate to a PyPI-available version for this environment
+accelerate>=1.12.0
+

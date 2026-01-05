@@ -138,3 +138,7 @@ logs/
 # Model artifacts (uncomment if you prefer to ignore trained models)
 # app/ml/*.joblib
 # app/ml/*.pkl
+backend/emails.csv
+backend/enron_parsed.csv
+*.safetensors
+*.pt

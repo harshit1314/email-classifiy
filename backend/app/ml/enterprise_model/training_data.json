@@ -1,0 +1,2165 @@
+[
+  {
+    "subject": "Request for Quote - Enterprise License",
+    "body": "Hi, we're interested in purchasing 500 enterprise licenses for our organization. Can you provide pricing and volume discounts?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398489"
+  },
+  {
+    "subject": "Demo Request - Your Product",
+    "body": "I'd like to schedule a demo of your software. We're evaluating solutions for our team of 200 users.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398499"
+  },
+  {
+    "subject": "Pricing inquiry",
+    "body": "What is the cost per user for your annual subscription? Do you offer educational discounts?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398502"
+  },
+  {
+    "subject": "Interested in your services",
+    "body": "We saw your presentation at the conference and would like to learn more about partnership opportunities.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398504"
+  },
+  {
+    "subject": "RFP Response Needed",
+    "body": "Please find attached our RFP. We need your response by end of month for the procurement process.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398505"
+  },
+  {
+    "subject": "Following up on our call",
+    "body": "Great speaking with you yesterday. As discussed, please send over the proposal for the pilot program.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398507"
+  },
+  {
+    "subject": "Budget approved - Ready to proceed",
+    "body": "Good news! Our budget has been approved. Let's schedule a call to finalize the contract.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398509"
+  },
+  {
+    "subject": "Need a quote ASAP",
+    "body": "We need pricing for 100 licenses urgently. Decision needs to be made by Friday.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398511"
+  },
+  {
+    "subject": "Renewal discussion",
+    "body": "Our subscription is expiring next month. Can we discuss renewal options and any new features?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398513"
+  },
+  {
+    "subject": "Upgrading our plan",
+    "body": "We'd like to upgrade from the basic to premium tier. What's involved in the transition?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398515"
+  },
+  {
+    "subject": "Volume discount inquiry",
+    "body": "If we increase our order to 1000 units, what kind of discount can you offer?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398516"
+  },
+  {
+    "subject": "Competitor comparison",
+    "body": "How does your pricing compare to [Competitor]? We're evaluating both solutions.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398518"
+  },
+  {
+    "subject": "Trial extension request",
+    "body": "Our team needs more time to evaluate. Can we extend the trial by 2 weeks?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398520"
+  },
+  {
+    "subject": "Custom solution needed",
+    "body": "Our requirements are unique. Can we discuss a custom package for our needs?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398521"
+  },
+  {
+    "subject": "Partnership opportunity",
+    "body": "We'd like to explore becoming a reseller partner in the APAC region.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398523"
+  },
+  {
+    "subject": "Contract negotiation",
+    "body": "We've reviewed the contract. Can we discuss the SLA terms and payment schedule?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398524"
+  },
+  {
+    "subject": "Proof of concept request",
+    "body": "Before committing, we'd like to run a POC with a small team. Is this possible?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398526"
+  },
+  {
+    "subject": "Bulk purchase inquiry",
+    "body": "We're a distributor looking to purchase in bulk. What are your wholesale terms?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398528"
+  },
+  {
+    "subject": "Sales meeting follow-up",
+    "body": "Thank you for the meeting. Please send the case studies you mentioned.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398530"
+  },
+  {
+    "subject": "Ready to buy",
+    "body": "We've completed our evaluation and are ready to proceed with the purchase.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398531"
+  },
+  {
+    "subject": "Quote revision needed",
+    "body": "The quote you sent has some items we don't need. Can you revise it?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398533"
+  },
+  {
+    "subject": "Multi-year deal discussion",
+    "body": "We're interested in a 3-year agreement. What additional discounts are available?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398534"
+  },
+  {
+    "subject": "Procurement process",
+    "body": "Our procurement team needs W-9, insurance certificates, and references.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398536"
+  },
+  {
+    "subject": "Decision maker intro",
+    "body": "I'd like to introduce you to our CTO who will make the final decision.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398538"
+  },
+  {
+    "subject": "Competitive bid situation",
+    "body": "We have quotes from 3 vendors. Your price needs to be competitive to win.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398539"
+  },
+  {
+    "subject": "Upsell opportunity",
+    "body": "We love the basic product. Tell me about the advanced features.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398541"
+  },
+  {
+    "subject": "New customer inquiry",
+    "body": "We're a startup looking for a solution. Do you have startup pricing?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398543"
+  },
+  {
+    "subject": "Government pricing",
+    "body": "Do you have GSA schedule pricing for federal agencies?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398545"
+  },
+  {
+    "subject": "Request for proposal",
+    "body": "Please submit your proposal for our digital transformation project.",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398546"
+  },
+  {
+    "subject": "Sales presentation request",
+    "body": "Can you present to our leadership team next Tuesday?",
+    "department": "sales",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398548"
+  },
+  {
+    "subject": "Job Application - Software Engineer",
+    "body": "Please find attached my resume and cover letter for the Software Engineer position.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398549"
+  },
+  {
+    "subject": "Interview availability",
+    "body": "I'm available for an interview Monday through Wednesday next week.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398551"
+  },
+  {
+    "subject": "Application status inquiry",
+    "body": "I applied two weeks ago and wanted to check on the status of my application.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398553"
+  },
+  {
+    "subject": "Salary negotiation",
+    "body": "Thank you for the offer. I'd like to discuss the compensation package.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398555"
+  },
+  {
+    "subject": "Benefits question",
+    "body": "Can you explain the health insurance options and 401k matching?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398556"
+  },
+  {
+    "subject": "Vacation request",
+    "body": "I'd like to request PTO from December 20-31 for the holidays.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398558"
+  },
+  {
+    "subject": "Sick leave notification",
+    "body": "I'm not feeling well and will be taking a sick day today.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398560"
+  },
+  {
+    "subject": "Resignation letter",
+    "body": "Please accept this as my formal notice of resignation, effective in two weeks.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398561"
+  },
+  {
+    "subject": "Reference request",
+    "body": "Would you be willing to serve as a professional reference for me?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398563"
+  },
+  {
+    "subject": "Payroll discrepancy",
+    "body": "My last paycheck seems incorrect. I'm missing 8 hours of overtime.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398564"
+  },
+  {
+    "subject": "Work from home request",
+    "body": "I'd like to request permission to work remotely on Fridays.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398566"
+  },
+  {
+    "subject": "Training opportunity",
+    "body": "I found a relevant conference. Can the company sponsor my attendance?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398568"
+  },
+  {
+    "subject": "Performance review scheduling",
+    "body": "When can we schedule my annual performance review?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398569"
+  },
+  {
+    "subject": "Promotion inquiry",
+    "body": "I'd like to discuss career growth opportunities and potential promotion paths.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398571"
+  },
+  {
+    "subject": "Employee referral",
+    "body": "I'd like to refer my former colleague for the open position.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398573"
+  },
+  {
+    "subject": "Harassment complaint",
+    "body": "I need to report an incident that occurred in the workplace.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398574"
+  },
+  {
+    "subject": "Accommodation request",
+    "body": "I need to request a reasonable accommodation for a medical condition.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398576"
+  },
+  {
+    "subject": "Onboarding questions",
+    "body": "I'm starting Monday. What do I need to bring on my first day?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398577"
+  },
+  {
+    "subject": "Exit interview scheduling",
+    "body": "Please schedule my exit interview before my last day.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398579"
+  },
+  {
+    "subject": "Policy clarification",
+    "body": "Can you clarify the company policy on expense reimbursement?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398580"
+  },
+  {
+    "subject": "Maternity leave inquiry",
+    "body": "I'm expecting and want to understand the maternity leave policy.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398582"
+  },
+  {
+    "subject": "Direct deposit setup",
+    "body": "I need to update my direct deposit information for payroll.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398583"
+  },
+  {
+    "subject": "Job description request",
+    "body": "Can you send me the full job description for the Manager role?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398585"
+  },
+  {
+    "subject": "Background check status",
+    "body": "Has my background check been completed yet?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398586"
+  },
+  {
+    "subject": "Employee handbook",
+    "body": "Where can I find the latest version of the employee handbook?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398588"
+  },
+  {
+    "subject": "Tuition reimbursement",
+    "body": "Does the company offer tuition assistance for graduate studies?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398589"
+  },
+  {
+    "subject": "FMLA inquiry",
+    "body": "I need information about taking FMLA leave for a family matter.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398591"
+  },
+  {
+    "subject": "Transfer request",
+    "body": "I'm interested in transferring to the London office.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398592"
+  },
+  {
+    "subject": "Internship application",
+    "body": "I'm a junior at State University applying for the summer internship.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398594"
+  },
+  {
+    "subject": "Diversity program",
+    "body": "How can I get involved in the company's diversity initiatives?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398595"
+  },
+  {
+    "subject": "401k enrollment",
+    "body": "How do I enroll in the company 401k plan?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398597"
+  },
+  {
+    "subject": "Time off balance",
+    "body": "Can you tell me my remaining PTO balance for the year?",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398598"
+  },
+  {
+    "subject": "New hire paperwork",
+    "body": "I've completed the I-9 and W-4 forms as requested.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398600"
+  },
+  {
+    "subject": "Workplace injury report",
+    "body": "I injured my back lifting equipment and need to file a report.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398601"
+  },
+  {
+    "subject": "Employee survey feedback",
+    "body": "I have some concerns I'd like to discuss from the recent survey.",
+    "department": "hr",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398603"
+  },
+  {
+    "subject": "Invoice #INV-2024-1234",
+    "body": "Please find attached invoice for services rendered in November.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398605"
+  },
+  {
+    "subject": "Payment confirmation needed",
+    "body": "Can you confirm receipt of our wire transfer from yesterday?",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398606"
+  },
+  {
+    "subject": "Expense report submission",
+    "body": "Attached is my expense report for the business trip to Chicago.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398608"
+  },
+  {
+    "subject": "Budget approval request",
+    "body": "Requesting approval for Q1 marketing budget of $50,000.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398609"
+  },
+  {
+    "subject": "Accounts payable inquiry",
+    "body": "When will payment be processed for invoice #5678?",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398611"
+  },
+  {
+    "subject": "Late payment notice",
+    "body": "Your account is 30 days past due. Please remit payment immediately.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398612"
+  },
+  {
+    "subject": "Tax document request",
+    "body": "Please send our W-9 form for your records.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398614"
+  },
+  {
+    "subject": "Reimbursement request",
+    "body": "I paid $150 out of pocket for office supplies and need reimbursement.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398616"
+  },
+  {
+    "subject": "Purchase order #PO-9876",
+    "body": "Please process the attached purchase order for new equipment.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398617"
+  },
+  {
+    "subject": "Credit memo request",
+    "body": "We were overcharged on invoice #1234. Please issue a credit memo.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398618"
+  },
+  {
+    "subject": "Quarterly financial report",
+    "body": "Attached is the Q3 financial summary for review.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398620"
+  },
+  {
+    "subject": "Audit documentation",
+    "body": "The auditors need copies of all invoices over $10,000 from last year.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398621"
+  },
+  {
+    "subject": "Bank account update",
+    "body": "Our banking information has changed. Please update your records.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398623"
+  },
+  {
+    "subject": "Payment terms discussion",
+    "body": "Can we extend payment terms to Net 60 for large orders?",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398625"
+  },
+  {
+    "subject": "Billing address change",
+    "body": "Please update our billing address to the new headquarters.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398626"
+  },
+  {
+    "subject": "Cost center allocation",
+    "body": "Which cost center should I charge this expense to?",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398628"
+  },
+  {
+    "subject": "Vendor payment status",
+    "body": "Has the payment to ABC Supplies been processed?",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398629"
+  },
+  {
+    "subject": "Revenue recognition query",
+    "body": "How should we recognize revenue for this multi-year contract?",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398631"
+  },
+  {
+    "subject": "Petty cash replenishment",
+    "body": "The petty cash fund needs to be replenished.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398632"
+  },
+  {
+    "subject": "Capital expenditure request",
+    "body": "Requesting CapEx approval for server infrastructure upgrade.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398634"
+  },
+  {
+    "subject": "Month-end close reminder",
+    "body": "Please submit all expenses by Friday for month-end close.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398635"
+  },
+  {
+    "subject": "Credit application",
+    "body": "We'd like to establish credit terms. Attached is our application.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398637"
+  },
+  {
+    "subject": "Duplicate payment alert",
+    "body": "It appears we were charged twice for order #5432.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398638"
+  },
+  {
+    "subject": "1099 form request",
+    "body": "Please send my 1099 form for tax filing purposes.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398640"
+  },
+  {
+    "subject": "Grant funding inquiry",
+    "body": "What is the status of the research grant disbursement?",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398641"
+  },
+  {
+    "subject": "Currency exchange question",
+    "body": "What exchange rate will be used for international payments?",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398643"
+  },
+  {
+    "subject": "Payroll tax question",
+    "body": "I have a question about the tax withholdings on my paycheck.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398644"
+  },
+  {
+    "subject": "Charitable donation receipt",
+    "body": "Please provide a receipt for our corporate donation.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398646"
+  },
+  {
+    "subject": "Contract value clarification",
+    "body": "Can you confirm the total contract value including all amendments?",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398648"
+  },
+  {
+    "subject": "Asset depreciation schedule",
+    "body": "Please send the depreciation schedule for the IT equipment.",
+    "department": "finance",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398650"
+  },
+  {
+    "subject": "Cannot login to email",
+    "body": "My Outlook keeps asking for my password and won't let me in.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398651"
+  },
+  {
+    "subject": "Password reset request",
+    "body": "I forgot my password and need it reset please.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398653"
+  },
+  {
+    "subject": "VPN not connecting",
+    "body": "I can't connect to the VPN from home. Getting timeout errors.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398654"
+  },
+  {
+    "subject": "Computer running slow",
+    "body": "My laptop has been extremely slow for the past week.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398656"
+  },
+  {
+    "subject": "Software installation request",
+    "body": "I need Adobe Creative Suite installed on my workstation.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398657"
+  },
+  {
+    "subject": "Printer not working",
+    "body": "The 3rd floor printer shows offline and won't print.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398659"
+  },
+  {
+    "subject": "New employee setup",
+    "body": "We have a new hire starting Monday who needs computer and accounts.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398660"
+  },
+  {
+    "subject": "Email not syncing",
+    "body": "My phone stopped syncing emails two days ago.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398662"
+  },
+  {
+    "subject": "Monitor not displaying",
+    "body": "My second monitor suddenly stopped working.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398663"
+  },
+  {
+    "subject": "Meeting room tech issue",
+    "body": "The video conferencing system in Room 201 isn't working.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398664"
+  },
+  {
+    "subject": "Access request - SharePoint",
+    "body": "I need access to the Marketing team SharePoint site.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398666"
+  },
+  {
+    "subject": "Laptop replacement request",
+    "body": "My laptop is 5 years old and needs to be replaced.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398667"
+  },
+  {
+    "subject": "WiFi connectivity issues",
+    "body": "The WiFi in the east wing keeps dropping.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398669"
+  },
+  {
+    "subject": "Microsoft Teams problem",
+    "body": "I can't join Teams meetings - getting error code 500.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398670"
+  },
+  {
+    "subject": "Account locked out",
+    "body": "I entered my password wrong too many times and I'm locked out.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398672"
+  },
+  {
+    "subject": "Software update needed",
+    "body": "My computer says Windows needs to update but it keeps failing.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398674"
+  },
+  {
+    "subject": "Data recovery request",
+    "body": "I accidentally deleted important files. Can they be recovered?",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398675"
+  },
+  {
+    "subject": "Email quota exceeded",
+    "body": "I'm getting messages that my mailbox is full.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398677"
+  },
+  {
+    "subject": "Mouse and keyboard not working",
+    "body": "My wireless mouse and keyboard stopped working.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398678"
+  },
+  {
+    "subject": "Blue screen error",
+    "body": "My computer keeps crashing with a blue screen.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398680"
+  },
+  {
+    "subject": "Two-factor authentication issue",
+    "body": "I got a new phone and need to reset my 2FA.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398681"
+  },
+  {
+    "subject": "Webcam not detected",
+    "body": "My laptop webcam isn't being detected for video calls.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398683"
+  },
+  {
+    "subject": "Slack not loading",
+    "body": "Slack has been stuck on loading screen all morning.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398684"
+  },
+  {
+    "subject": "File sharing permissions",
+    "body": "I can't access the project folder. Permission denied error.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398686"
+  },
+  {
+    "subject": "Zoom installation",
+    "body": "I need Zoom installed for client meetings.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398687"
+  },
+  {
+    "subject": "Desktop icons missing",
+    "body": "All my desktop icons disappeared after the update.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398689"
+  },
+  {
+    "subject": "Antivirus alert",
+    "body": "I'm getting a virus warning popup. Is this legitimate?",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398690"
+  },
+  {
+    "subject": "New software license",
+    "body": "I need a license for the new project management tool.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398692"
+  },
+  {
+    "subject": "Network drive not mapped",
+    "body": "The N: drive is not showing up on my computer.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398693"
+  },
+  {
+    "subject": "Browser issues",
+    "body": "Chrome keeps crashing when I open certain websites.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398695"
+  },
+  {
+    "subject": "Audio not working",
+    "body": "No sound is coming from my computer speakers.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398696"
+  },
+  {
+    "subject": "Docking station problem",
+    "body": "My laptop won't connect to the docking station properly.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398698"
+  },
+  {
+    "subject": "Remote desktop access",
+    "body": "I need remote desktop access to my office computer.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398700"
+  },
+  {
+    "subject": "Calendar sync issue",
+    "body": "My calendar isn't syncing between phone and computer.",
+    "department": "it_support",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398701"
+  },
+  {
+    "subject": "Contract review request",
+    "body": "Please review the attached vendor agreement before we sign.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398703"
+  },
+  {
+    "subject": "NDA needed",
+    "body": "We need an NDA drafted for a potential partnership discussion.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398705"
+  },
+  {
+    "subject": "Terms and conditions update",
+    "body": "Our website T&Cs need to be updated for the new product.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398706"
+  },
+  {
+    "subject": "Compliance question",
+    "body": "Does our data handling comply with GDPR requirements?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398708"
+  },
+  {
+    "subject": "Trademark inquiry",
+    "body": "We want to trademark our new product name. What's the process?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398710"
+  },
+  {
+    "subject": "Legal dispute notification",
+    "body": "We received a cease and desist letter from a competitor.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398711"
+  },
+  {
+    "subject": "Patent application status",
+    "body": "What's the status of our pending patent application?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398713"
+  },
+  {
+    "subject": "Privacy policy review",
+    "body": "Please review the updated privacy policy for compliance.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398714"
+  },
+  {
+    "subject": "Employment contract template",
+    "body": "We need an updated employment contract template.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398716"
+  },
+  {
+    "subject": "Licensing agreement review",
+    "body": "Please review the software licensing agreement.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398717"
+  },
+  {
+    "subject": "Regulatory filing deadline",
+    "body": "When is the deadline for the SEC filing?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398719"
+  },
+  {
+    "subject": "Intellectual property question",
+    "body": "Who owns the IP for work created by contractors?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398720"
+  },
+  {
+    "subject": "Subpoena received",
+    "body": "We received a subpoena for customer records.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398722"
+  },
+  {
+    "subject": "Data breach notification",
+    "body": "We may have had a data breach. What are our obligations?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398723"
+  },
+  {
+    "subject": "Contract termination",
+    "body": "We need to terminate the vendor contract per clause 12.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398725"
+  },
+  {
+    "subject": "Liability waiver needed",
+    "body": "We need a liability waiver for the company event.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398726"
+  },
+  {
+    "subject": "Non-compete clause question",
+    "body": "Can employees consult for clients after leaving?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398728"
+  },
+  {
+    "subject": "Copyright infringement",
+    "body": "Someone is using our content without permission.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398729"
+  },
+  {
+    "subject": "HIPAA compliance check",
+    "body": "Is our new system HIPAA compliant?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398731"
+  },
+  {
+    "subject": "Board resolution needed",
+    "body": "We need a board resolution for the new credit line.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398732"
+  },
+  {
+    "subject": "Settlement discussion",
+    "body": "The plaintiff is willing to settle. What do you recommend?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398734"
+  },
+  {
+    "subject": "SLA review",
+    "body": "Please review the service level agreement terms.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398736"
+  },
+  {
+    "subject": "Insurance claim assistance",
+    "body": "We need to file an insurance claim for the incident.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398737"
+  },
+  {
+    "subject": "Corporate governance question",
+    "body": "What's the proper procedure for board voting?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398738"
+  },
+  {
+    "subject": "Export compliance",
+    "body": "Can we export this product to these countries?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398740"
+  },
+  {
+    "subject": "Acquisition due diligence",
+    "body": "We need legal due diligence for the acquisition target.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398742"
+  },
+  {
+    "subject": "Power of attorney",
+    "body": "We need POA documentation for the foreign subsidiary.",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398753"
+  },
+  {
+    "subject": "Labor law question",
+    "body": "Is mandatory overtime legal in California?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398755"
+  },
+  {
+    "subject": "FDA regulatory question",
+    "body": "What FDA approvals do we need for this medical device?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398757"
+  },
+  {
+    "subject": "Antitrust concern",
+    "body": "Is this pricing arrangement legal under antitrust law?",
+    "department": "legal",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398758"
+  },
+  {
+    "subject": "Campaign performance report",
+    "body": "Here's the weekly report on our social media campaigns.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398760"
+  },
+  {
+    "subject": "Press release review",
+    "body": "Please review the press release for the product launch.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398762"
+  },
+  {
+    "subject": "Brand guidelines question",
+    "body": "What fonts and colors should we use for the brochure?",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398763"
+  },
+  {
+    "subject": "Trade show materials",
+    "body": "We need updated banners and handouts for the conference.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398765"
+  },
+  {
+    "subject": "Social media strategy",
+    "body": "Let's discuss our Q1 social media content calendar.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398766"
+  },
+  {
+    "subject": "Website content update",
+    "body": "The product page content needs to be refreshed.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398768"
+  },
+  {
+    "subject": "Email newsletter draft",
+    "body": "Here's the draft for this month's customer newsletter.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398770"
+  },
+  {
+    "subject": "Logo usage request",
+    "body": "A partner wants to use our logo. What are the guidelines?",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398772"
+  },
+  {
+    "subject": "Advertising budget request",
+    "body": "Requesting additional budget for LinkedIn ads.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398773"
+  },
+  {
+    "subject": "Case study creation",
+    "body": "Can we create a case study with the Smith Corp success story?",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398775"
+  },
+  {
+    "subject": "Product naming discussion",
+    "body": "We need to finalize the name for the new feature.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398777"
+  },
+  {
+    "subject": "Webinar planning",
+    "body": "Let's plan a webinar on industry trends for next month.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398778"
+  },
+  {
+    "subject": "Blog post review",
+    "body": "Please review the attached blog post before publishing.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398779"
+  },
+  {
+    "subject": "Competitive analysis",
+    "body": "Can you provide an analysis of competitor marketing?",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398781"
+  },
+  {
+    "subject": "SEO recommendations",
+    "body": "We need SEO improvements for better search rankings.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398783"
+  },
+  {
+    "subject": "Video production request",
+    "body": "We need a product demo video for the website.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398785"
+  },
+  {
+    "subject": "Event sponsorship opportunity",
+    "body": "Should we sponsor the tech conference in March?",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398786"
+  },
+  {
+    "subject": "Customer testimonial request",
+    "body": "Can you reach out to happy customers for testimonials?",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398788"
+  },
+  {
+    "subject": "Market research findings",
+    "body": "Here are the results from the recent market survey.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398789"
+  },
+  {
+    "subject": "Brand ambassador program",
+    "body": "Let's discuss launching an influencer partnership program.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398790"
+  },
+  {
+    "subject": "Rebranding proposal",
+    "body": "Here's the proposal for refreshing our brand identity.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398792"
+  },
+  {
+    "subject": "Media kit request",
+    "body": "A journalist needs our media kit for an article.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398794"
+  },
+  {
+    "subject": "Product launch timeline",
+    "body": "What's the marketing timeline for the spring launch?",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398795"
+  },
+  {
+    "subject": "Ad creative feedback",
+    "body": "Please review the new ad designs and provide feedback.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398796"
+  },
+  {
+    "subject": "Content calendar update",
+    "body": "The content calendar needs updating for holidays.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398798"
+  },
+  {
+    "subject": "Crisis communication plan",
+    "body": "We need a communication plan for the PR situation.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398800"
+  },
+  {
+    "subject": "Lead generation report",
+    "body": "Here's the monthly lead gen performance report.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398801"
+  },
+  {
+    "subject": "Partnership marketing",
+    "body": "Let's discuss co-marketing opportunities with partners.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398803"
+  },
+  {
+    "subject": "Analytics dashboard review",
+    "body": "The marketing analytics dashboard needs attention.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398805"
+  },
+  {
+    "subject": "Email automation setup",
+    "body": "We need to set up automated email sequences.",
+    "department": "marketing",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398806"
+  },
+  {
+    "subject": "Product not working",
+    "body": "The product I received doesn't turn on. Very disappointed.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398808"
+  },
+  {
+    "subject": "Refund request",
+    "body": "I'd like a refund for my recent purchase. Order #12345.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398810"
+  },
+  {
+    "subject": "Shipping delay complaint",
+    "body": "My order was supposed to arrive 5 days ago.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398812"
+  },
+  {
+    "subject": "Wrong item received",
+    "body": "I ordered the blue version but received red instead.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398813"
+  },
+  {
+    "subject": "Damaged product",
+    "body": "The item arrived broken. Please see attached photos.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398815"
+  },
+  {
+    "subject": "Cancel my subscription",
+    "body": "I want to cancel my subscription immediately.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398816"
+  },
+  {
+    "subject": "Poor customer service experience",
+    "body": "I've been on hold for 2 hours trying to get help.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398818"
+  },
+  {
+    "subject": "Product quality complaint",
+    "body": "The quality is much worse than described on the website.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398820"
+  },
+  {
+    "subject": "Missing parts",
+    "body": "The assembly kit is missing several important pieces.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398821"
+  },
+  {
+    "subject": "Warranty claim",
+    "body": "My product broke within the warranty period. How do I claim?",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398823"
+  },
+  {
+    "subject": "Exchange request",
+    "body": "I'd like to exchange this for a different size.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398825"
+  },
+  {
+    "subject": "Billing complaint",
+    "body": "I was charged twice for the same order.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398826"
+  },
+  {
+    "subject": "Account cancellation",
+    "body": "Please delete my account and all associated data.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398828"
+  },
+  {
+    "subject": "Service outage complaint",
+    "body": "Your service has been down for 3 days. This is unacceptable.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398830"
+  },
+  {
+    "subject": "Late delivery",
+    "body": "Delivery was scheduled for Monday but it's now Wednesday.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398831"
+  },
+  {
+    "subject": "Product recall inquiry",
+    "body": "I heard there's a recall. Is my product affected?",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398833"
+  },
+  {
+    "subject": "Feature not working",
+    "body": "The main feature that I bought this for doesn't work.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398834"
+  },
+  {
+    "subject": "Terrible experience",
+    "body": "Worst customer experience I've ever had. I want a manager.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398836"
+  },
+  {
+    "subject": "Return shipping label",
+    "body": "I need a prepaid return shipping label.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398837"
+  },
+  {
+    "subject": "Order tracking issue",
+    "body": "The tracking number you provided doesn't work.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398839"
+  },
+  {
+    "subject": "Subscription not cancelled",
+    "body": "I cancelled last month but was still charged.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398841"
+  },
+  {
+    "subject": "Product recall",
+    "body": "How do I return my product that was recalled?",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398842"
+  },
+  {
+    "subject": "Misleading advertising",
+    "body": "The product is nothing like the advertisement showed.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398844"
+  },
+  {
+    "subject": "Unresponsive support",
+    "body": "I've sent 5 emails and no one has responded.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398846"
+  },
+  {
+    "subject": "App crashing",
+    "body": "Your mobile app keeps crashing. Please fix this.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398847"
+  },
+  {
+    "subject": "Request for credit",
+    "body": "I'd like a credit for the inconvenience caused.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398849"
+  },
+  {
+    "subject": "Delivery instructions ignored",
+    "body": "The driver left the package in the rain despite instructions.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398851"
+  },
+  {
+    "subject": "Service complaint",
+    "body": "Your technician was rude and unprofessional.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398852"
+  },
+  {
+    "subject": "Feature suggestion",
+    "body": "It would be great if your product could do X.",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398854"
+  },
+  {
+    "subject": "Positive feedback",
+    "body": "Just wanted to say your support team was amazing!",
+    "department": "customer_service",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398856"
+  },
+  {
+    "subject": "Shipment tracking",
+    "body": "Can you provide the tracking number for order #7890?",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398857"
+  },
+  {
+    "subject": "Delivery schedule",
+    "body": "When is the expected delivery date for our equipment?",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398859"
+  },
+  {
+    "subject": "Warehouse inventory question",
+    "body": "What's the current stock level of SKU-12345?",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398861"
+  },
+  {
+    "subject": "Vendor delivery delay",
+    "body": "Our supplier says delivery will be delayed by 2 weeks.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398862"
+  },
+  {
+    "subject": "Quality control issue",
+    "body": "We found defects in 5% of the last shipment.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398864"
+  },
+  {
+    "subject": "Shipping rate inquiry",
+    "body": "What are shipping costs for international orders?",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398865"
+  },
+  {
+    "subject": "Fulfillment center issue",
+    "body": "Orders from the West Coast center are delayed.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398867"
+  },
+  {
+    "subject": "Inventory replenishment",
+    "body": "We're running low on product X. Please reorder.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398869"
+  },
+  {
+    "subject": "Supply chain disruption",
+    "body": "Our main supplier has capacity issues.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398870"
+  },
+  {
+    "subject": "Packaging requirements",
+    "body": "What are the packaging specs for fragile items?",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398872"
+  },
+  {
+    "subject": "Return merchandise authorization",
+    "body": "We need an RMA for defective products.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398874"
+  },
+  {
+    "subject": "Carrier change request",
+    "body": "Can we switch from FedEx to UPS for this account?",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398876"
+  },
+  {
+    "subject": "Warehouse space needed",
+    "body": "We need additional storage space for the holiday season.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398878"
+  },
+  {
+    "subject": "Production schedule update",
+    "body": "Here's the updated production schedule for Q1.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398880"
+  },
+  {
+    "subject": "Equipment maintenance",
+    "body": "The conveyor belt in warehouse B needs maintenance.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398882"
+  },
+  {
+    "subject": "Customs clearance issue",
+    "body": "The international shipment is stuck in customs.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398884"
+  },
+  {
+    "subject": "Freight cost optimization",
+    "body": "Can we consolidate shipments to reduce costs?",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398885"
+  },
+  {
+    "subject": "Product recall logistics",
+    "body": "How do we handle the logistics for the product recall?",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398887"
+  },
+  {
+    "subject": "New vendor onboarding",
+    "body": "We need to onboard a new parts supplier.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398889"
+  },
+  {
+    "subject": "Safety incident report",
+    "body": "There was a minor accident in the warehouse today.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398890"
+  },
+  {
+    "subject": "Fleet management update",
+    "body": "Three delivery trucks need service this week.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398892"
+  },
+  {
+    "subject": "Capacity planning",
+    "body": "What's our production capacity for next quarter?",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398894"
+  },
+  {
+    "subject": "Order fulfillment delay",
+    "body": "Several orders are delayed due to stock shortage.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398896"
+  },
+  {
+    "subject": "Supplier quality audit",
+    "body": "We need to schedule a quality audit at the supplier.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398898"
+  },
+  {
+    "subject": "Logistics cost report",
+    "body": "Here's the monthly logistics cost analysis.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398899"
+  },
+  {
+    "subject": "Cold chain compliance",
+    "body": "Are we meeting cold chain requirements for pharma?",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398901"
+  },
+  {
+    "subject": "Drop shipping setup",
+    "body": "We want to set up drop shipping for new products.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398902"
+  },
+  {
+    "subject": "Import documentation",
+    "body": "What documents are needed for importing from China?",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398904"
+  },
+  {
+    "subject": "Last mile delivery issue",
+    "body": "Last mile delivery costs are too high in rural areas.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398905"
+  },
+  {
+    "subject": "Inventory cycle count",
+    "body": "We need to schedule the quarterly inventory count.",
+    "department": "operations",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398907"
+  },
+  {
+    "subject": "Board meeting agenda",
+    "body": "Attached is the agenda for next week's board meeting.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398908"
+  },
+  {
+    "subject": "Investor update",
+    "body": "Please review the quarterly investor update letter.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398910"
+  },
+  {
+    "subject": "Strategic planning session",
+    "body": "We need to schedule the annual strategy retreat.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398911"
+  },
+  {
+    "subject": "M&A opportunity",
+    "body": "A potential acquisition target has been identified.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398913"
+  },
+  {
+    "subject": "CEO communication",
+    "body": "Please review this communication before it goes to all staff.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398915"
+  },
+  {
+    "subject": "Executive compensation review",
+    "body": "It's time for the annual executive comp review.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398916"
+  },
+  {
+    "subject": "Board resolution required",
+    "body": "We need board approval for the new credit facility.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398918"
+  },
+  {
+    "subject": "Shareholder meeting",
+    "body": "Preparing materials for the annual shareholder meeting.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398919"
+  },
+  {
+    "subject": "Leadership team changes",
+    "body": "Announcing changes to the executive leadership team.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398921"
+  },
+  {
+    "subject": "Company valuation",
+    "body": "Investment bankers provided preliminary valuation estimates.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398923"
+  },
+  {
+    "subject": "Confidential strategic matter",
+    "body": "This requires executive-level discussion only.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398924"
+  },
+  {
+    "subject": "IPO preparation",
+    "body": "Here's the timeline for IPO readiness activities.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398926"
+  },
+  {
+    "subject": "Private equity inquiry",
+    "body": "A PE firm has expressed interest in our company.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398927"
+  },
+  {
+    "subject": "Executive search",
+    "body": "We're starting the search for a new CFO.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398929"
+  },
+  {
+    "subject": "Crisis management",
+    "body": "We have a situation that requires immediate executive attention.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398930"
+  },
+  {
+    "subject": "Quarterly earnings call",
+    "body": "Preparing for the upcoming earnings call.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398932"
+  },
+  {
+    "subject": "Competitive intelligence",
+    "body": "Important competitive intelligence for leadership review.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398934"
+  },
+  {
+    "subject": "Board member communication",
+    "body": "A board member is requesting a call with the CEO.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398935"
+  },
+  {
+    "subject": "Strategic partnership",
+    "body": "A major strategic partnership opportunity has emerged.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398937"
+  },
+  {
+    "subject": "Succession planning",
+    "body": "We need to discuss executive succession planning.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398939"
+  },
+  {
+    "subject": "Regulatory meeting",
+    "body": "Meeting scheduled with regulatory officials.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398941"
+  },
+  {
+    "subject": "Media interview request",
+    "body": "Bloomberg wants to interview the CEO.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398942"
+  },
+  {
+    "subject": "Organizational restructuring",
+    "body": "Proposal for organizational changes attached.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398944"
+  },
+  {
+    "subject": "Executive offsite",
+    "body": "Planning the Q2 executive leadership offsite.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398945"
+  },
+  {
+    "subject": "Investor relations update",
+    "body": "Major institutional investor wants a call.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398947"
+  },
+  {
+    "subject": "Proxy statement review",
+    "body": "Please review the proxy statement draft.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398949"
+  },
+  {
+    "subject": "Governance committee",
+    "body": "Governance committee meeting scheduled for Thursday.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398951"
+  },
+  {
+    "subject": "Executive summary request",
+    "body": "The board needs an executive summary of the project.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398953"
+  },
+  {
+    "subject": "Confidential: Market opportunity",
+    "body": "Highly confidential market expansion opportunity.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398954"
+  },
+  {
+    "subject": "CEO succession",
+    "body": "Discussing long-term CEO succession plan.",
+    "department": "executive",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398956"
+  },
+  {
+    "subject": "Office supplies order",
+    "body": "We need to reorder pens, paper, and sticky notes.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398958"
+  },
+  {
+    "subject": "Meeting room booking",
+    "body": "Can I reserve Conference Room A for Thursday at 2pm?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398959"
+  },
+  {
+    "subject": "Building maintenance",
+    "body": "The air conditioning on floor 3 isn't working.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398961"
+  },
+  {
+    "subject": "Parking inquiry",
+    "body": "How do I get a parking permit for the garage?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398962"
+  },
+  {
+    "subject": "Lost and found",
+    "body": "I left my jacket in the break room. Has anyone seen it?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398964"
+  },
+  {
+    "subject": "Newsletter subscription",
+    "body": "Please subscribe me to the company newsletter.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398965"
+  },
+  {
+    "subject": "General question",
+    "body": "Quick question - what are the office hours during holidays?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398967"
+  },
+  {
+    "subject": "Cafeteria feedback",
+    "body": "The cafeteria should offer more vegetarian options.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398969"
+  },
+  {
+    "subject": "Mail distribution",
+    "body": "I'm expecting an important package. When does mail arrive?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398970"
+  },
+  {
+    "subject": "Visitor registration",
+    "body": "I have a guest visiting tomorrow. How do I register them?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398972"
+  },
+  {
+    "subject": "Office event",
+    "body": "Don't forget about the team lunch this Friday!",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398974"
+  },
+  {
+    "subject": "Badge access",
+    "body": "My badge isn't working at the main entrance.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398975"
+  },
+  {
+    "subject": "Contact information update",
+    "body": "Please update my phone number in the directory.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398977"
+  },
+  {
+    "subject": "Weather closure question",
+    "body": "Is the office closed due to the snow storm?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398978"
+  },
+  {
+    "subject": "Team building event",
+    "body": "Who's organizing the summer team building event?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398980"
+  },
+  {
+    "subject": "Office plants",
+    "body": "Who is responsible for watering the office plants?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398982"
+  },
+  {
+    "subject": "Birthday celebration",
+    "body": "We're celebrating Sarah's birthday in the break room.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398983"
+  },
+  {
+    "subject": "Carpool interest",
+    "body": "Anyone interested in carpooling from the north side?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398985"
+  },
+  {
+    "subject": "Office temperature",
+    "body": "It's too cold in the office. Can we adjust the thermostat?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398986"
+  },
+  {
+    "subject": "Charity drive",
+    "body": "Reminder: the food drive ends this Friday.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398988"
+  },
+  {
+    "subject": "Kitchen cleanliness",
+    "body": "Please clean up after using the kitchen.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398989"
+  },
+  {
+    "subject": "Desk assignment",
+    "body": "I'm moving to the 4th floor. How do I arrange that?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398991"
+  },
+  {
+    "subject": "Company swag",
+    "body": "Are there any company t-shirts available?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398993"
+  },
+  {
+    "subject": "Phone extension",
+    "body": "What's the extension for the IT help desk?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398994"
+  },
+  {
+    "subject": "Out of office setup",
+    "body": "How do I set up an out of office auto-reply?",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398996"
+  },
+  {
+    "subject": "Coffee machine broken",
+    "body": "The coffee machine on floor 2 is broken.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398997"
+  },
+  {
+    "subject": "Elevator not working",
+    "body": "The west elevator is out of service again.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.398999"
+  },
+  {
+    "subject": "Fire drill notice",
+    "body": "Fire drill scheduled for tomorrow at 10am.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.399000"
+  },
+  {
+    "subject": "Survey reminder",
+    "body": "Please complete the employee engagement survey.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.399002"
+  },
+  {
+    "subject": "Holiday party",
+    "body": "RSVP for the holiday party by end of week.",
+    "department": "general",
+    "sender": "",
+    "timestamp": "2025-12-28T20:32:35.399003"
+  }
+]

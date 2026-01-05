@@ -1,0 +1,75 @@
+# Enhanced Requirements for Advanced Email Classification Models
+# Core FastAPI and web framework dependencies
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+aiofiles>=23.2.1
+python-dotenv>=1.0.0
+
+# Authentication and security
+bcrypt>=4.0.1
+PyJWT>=2.8.0
+email-validator>=2.0.0
+
+# Google and Microsoft APIs
+google-api-python-client>=2.100.0
+google-auth-httplib2>=0.1.1
+google-auth-oauthlib>=1.1.0
+msal>=1.24.0
+
+# Core ML and data processing
+scikit-learn>=1.4.0
+numpy>=1.26.0
+pandas>=2.1.3
+joblib>=1.3.2
+requests>=2.31.0
+
+# Advanced NLP and Transformer Models
+transformers>=4.36.0
+torch>=2.1.0
+sentencepiece>=0.1.99
+accelerate>=1.12.0
+datasets>=2.14.0
+
+# Sentence Transformers for semantic similarity
+sentence-transformers>=2.2.2
+
+# Additional tokenizers for advanced models
+tokenizers>=0.15.0
+
+# Vector similarity and indexing
+faiss-cpu>=1.7.4  # Use faiss-gpu if you have CUDA
+# faiss-gpu>=1.7.4  # Uncomment for GPU acceleration
+
+# Text processing and NLP utilities
+textblob>=0.17.1
+nltk>=3.8.1
+spacy>=3.7.0
+
+# Performance monitoring
+psutil>=5.9.0
+
+# OpenAI (optional for GPT-based classification)
+openai>=1.0.0
+
+# Visualization and analysis
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Model optimization and quantization (optional)
+optimum>=1.16.0
+
+# For advanced ELECTRA and DeBERTa models
+# These are automatically handled by transformers, but specifying for clarity
+# microsoft/deberta-v3-large-mnli
+# google/electra-large-discriminator
+
+# Development and testing dependencies (optional)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.24.0  # For testing FastAPI endpoints
+
+# Async MongoDB driver
+motor>=3.4.0
+pymongo>=4.5.0  # Motor depends on pymongo, pin for compatibility
