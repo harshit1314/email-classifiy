@@ -7,21 +7,11 @@ import logging
 from typing import Dict, Optional
 from datetime import datetime
 
-# Import advanced rules engine
-try:
-    from app.services.advanced_action_rules import AdvancedActionRules
-    ADVANCED_RULES_AVAILABLE = True
-except ImportError:
-    ADVANCED_RULES_AVAILABLE = False
-
-# Import enterprise routing engine
-try:
-    from app.services.enterprise_routing_engine import EnterpriseRoutingEngine
-    ENTERPRISE_ROUTING_AVAILABLE = True
-except ImportError:
-    ENTERPRISE_ROUTING_AVAILABLE = False
-
 logger = logging.getLogger(__name__)
+
+# Simplified action service without advanced features
+ADVANCED_RULES_AVAILABLE = False
+ENTERPRISE_ROUTING_AVAILABLE = False
 
 class ActionService:
     """Service for handling actions based on email classification"""

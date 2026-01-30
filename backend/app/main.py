@@ -102,7 +102,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"MongoDB initialization failed: {e}")
 
-    global db_logger, action_service, processing_service, ingestion_service, email_poller, email_processor
+    global db_logger, action_service, processing_service, ingestion_service, email_poller
     global auth_service, export_service, analytics_service, custom_categories_service
     global notification_service, retraining_service, auto_reply_service, filter_service
     global scheduler_service, calendar_service, report_service, task_service, webhook_service
@@ -120,10 +120,6 @@ async def lifespan(app: FastAPI):
     )
     ingestion_service = IngestionService(processing_service=processing_service)
     email_poller = EmailPoller(ingestion_service=ingestion_service)
-    
-    # Initialize email processor for MongoDB-first architecture
-    from app.services.email_processor import EmailProcessor
-    email_processor = EmailProcessor(processing_service=processing_service, db_logger=db_logger)
 
     # Initialize new services
     auth_service = AuthService()
@@ -160,11 +156,7 @@ async def lifespan(app: FastAPI):
         auth_service.init_database()
         
         await email_poller.start_gmail_polling({})
-        
-        # Start email processor to process emails from MongoDB
-        logger.info("Starting email processor for MongoDB-first architecture...")
-        await email_processor.start_processing(interval=5)
-        logger.info("✅ Email processor started")
+        logger.info("✅ Email services initialized")
     except Exception as e:
         logger.warning(f"Auto-connect to Gmail failed (this is normal if not configured yet): {e}")
     
