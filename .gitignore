@@ -140,6 +140,9 @@ logs/
 # app/ml/*.pkl
 backend/emails.csv
 backend/enron_parsed.csv
+backend/enron_emails_processed.csv
+backend/enron_emails_processed_sample.csv
+backend/enron_dataset_path.txt
 *.safetensors
 *.pt
 backend/app/ml/enterprise_model/
@@ -152,6 +155,10 @@ backend/*.db
 backend/gmail_credentials.json
 backend/gmail_token.json
 
+# Kaggle datasets and cache
+.kaggle/
+**/kagglehub/
+
 # Old scripts and backups
 *.backup.*
 *.old
@@ -160,11 +167,16 @@ backend/check_*.py
 backend/cleanup_*.py
 backend/compare_*.py
 backend/debug_*.py
+# Keep download_enron_dataset.py and process_enron_dataset.py
+!backend/download_enron_dataset.py
+!backend/process_enron_dataset.py
 backend/enron_*.py
 backend/fix_*.py
 backend/migrate_*.py
 backend/notebook_*.py
 backend/preview_*.py
+# Keep process_enron_dataset.py
+!backend/process_enron_dataset.py
 backend/process_*.py
 backend/remove_*.py
 backend/reprocess_*.py

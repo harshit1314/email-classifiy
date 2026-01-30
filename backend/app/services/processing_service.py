@@ -8,7 +8,30 @@ from typing import Dict, Optional
 from datetime import datetime
 from functools import lru_cache
 import hashlib
-from app.ml.classifier import EmailClassifier
+import os
+import joblib
+
+# Try to load improved classifier first, fallback to basic
+try:
+    # Check if trained model exists
+    model_path = os.path.join(os.path.dirname(__file__), '..', 'ml', 'improved_classifier_model.joblib')
+    if os.path.exists(model_path):
+        # Load the trained sklearn pipeline
+        trained_classifier = joblib.load(model_path)
+        USE_TRAINED_MODEL = True
+        logger = logging.getLogger(__name__)
+        logger.info(f"✅ Loaded trained model from {model_path}")
+    else:
+        from app.ml.improved_classifier import ImprovedEmailClassifier
+        USE_TRAINED_MODEL = False
+        logger = logging.getLogger(__name__)
+        logger.info("⚠️ Trained model not found, using ImprovedEmailClassifier")
+except Exception as e:
+    from app.ml.classifier import EmailClassifier
+    USE_TRAINED_MODEL = False
+    logger = logging.getLogger(__name__)
+    logger.warning(f"⚠️ Could not load improved classifier: {e}, using basic EmailClassifier")
+
 from app.database.logger import DatabaseLogger
 
 # Import department routing service
@@ -33,11 +56,26 @@ class ProcessingService:
         Args:
             action_service: Action service for routing
             db_logger: Database logger
-            use_llm: DEPRECATED - LLM is disabled, using BERT only
+            use_llm: DEPRECATED - LLM is disabled, using trained model
             llm_api_key: DEPRECATED - not used
         """
-        # Always use BERT/TF-IDF, never LLM
-        self.classifier = EmailClassifier(use_bert=True, use_llm=False)
+        # Use trained model if available, otherwise fallback
+        if USE_TRAINED_MODEL:
+            self.classifier = trained_classifier
+            self.is_sklearn_pipeline = True
+            logger.info("✅ Using trained sklearn pipeline model")
+        else:
+            from app.ml.improved_classifier import ImprovedEmailClassifier
+            try:
+                self.classifier = ImprovedEmailClassifier()
+                self.is_sklearn_pipeline = False
+                logger.info("✅ Using ImprovedEmailClassifier")
+            except:
+                from app.ml.classifier import EmailClassifier
+                self.classifier = EmailClassifier(use_bert=True, use_llm=False)
+                self.is_sklearn_pipeline = False
+                logger.info("⚠️ Using basic EmailClassifier")
+                
         self.action_service = action_service
         self.db_logger = db_logger or DatabaseLogger()
         self._classification_cache = {}  # In-memory cache for classifications
@@ -77,8 +115,28 @@ class ProcessingService:
         
         logger.info(f"Analyzing email: {subject[:50]}...")
         
-        # Classify email using ML model (pass sender for LLM context)
-        classification_result = self.classifier.classify(subject, body, sender)
+        # Classify email - handle both sklearn pipeline and custom classifiers
+        if self.is_sklearn_pipeline:
+            # For sklearn pipeline (trained model)
+            text = f"{subject} {body}"
+            predicted_category = self.classifier.predict([text])[0]
+            
+            # Get confidence from predict_proba if available
+            if hasattr(self.classifier, 'predict_proba'):
+                proba = self.classifier.predict_proba([text])[0]
+                confidence = float(max(proba))
+            else:
+                confidence = 0.85  # Default confidence
+            
+            classification_result = {
+                "category": predicted_category,
+                "confidence": confidence,
+                "timestamp": datetime.now().isoformat()
+            }
+            logger.info(f"Classification: {predicted_category} (confidence: {confidence:.2f})")
+        else:
+            # For custom classifier with classify method
+            classification_result = self.classifier.classify(subject, body, sender)
         
         # Route to department based on category
         department = None
