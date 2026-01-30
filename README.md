@@ -265,6 +265,10 @@ The frontend will automatically open in your browser at: `http://localhost:3001`
 - Use `google-api-python-client` for production
 - OAuth 2.0 authentication required
 
+**Re-authenticating when tokens expire or are revoked** ✅
+- If you see errors like `invalid_grant: Token has been expired or revoked` remove the local token file `gmail_token.json` (if present) and re-run the OAuth flow by calling the API endpoint `POST /api/email/start-gmail` with `client_id` and `client_secret` (or `credentials_file`). Then complete the OAuth consent in your browser to create a new token.
+- For headless or remote servers, set the environment variable `GMAIL_HEADLESS=true` before starting the backend; the server will use a console-based OAuth flow (it will print a URL and prompt for the authorization code in the server terminal).
+
 ### Outlook Integration
 - Placeholder for Microsoft Graph API integration
 - Use `msal` and Microsoft Graph SDK for production
@@ -317,5 +321,6 @@ This is a final year project. Feel free to extend and improve!
 ---
 
 **Built with ❤️ for Final Year Project**
-#   e m a i l - c l a s s i f i y  
+#   e m a i l - c l a s s i f i y 
+ 
  

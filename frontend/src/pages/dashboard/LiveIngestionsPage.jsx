@@ -41,11 +41,11 @@ const LiveIngestionsPage = () => {
         setLoading(true)
         try {
             const [classRes, statusRes] = await Promise.all([
-                axios.get(`${API_URL}/api/dashboard/classifications?limit=100`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${API_URL}/api/dashboard/classifications?limit=500`, { headers: { Authorization: `Bearer ${token}` } }),
                 axios.get(`${API_URL}/api/email/status`)
             ])
 
-            setRecentEmails((classRes.data.classifications || []).slice(0, 100))
+            setRecentEmails((classRes.data.classifications || []).slice(0, 500))
             setPollingStatus(statusRes.data)
         } catch (err) {
             console.error('Failed to fetch ingestion data:', err)

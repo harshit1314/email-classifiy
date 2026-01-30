@@ -40,12 +40,14 @@ async def test_gmail_connect_backfill(monkeypatch):
 
     # Start polling (this will perform immediate backfill)
     result = await poller.start_gmail_polling({}, interval=60, batch_size=3)
-    assert result is True
+    assert isinstance(result, dict)
+    assert result.get('started') is True
+    assert result.get('backfilled') == 3
 
     # Verify that ingested_emails collection has entries for our test messages
-    collection = mongo_db._db[mongo_db.Config.MONGO_INGEST_COLLECTION] if hasattr(mongo_db, '_db') else None
-    # Use the public helpers to query instead
-    # We can't directly access db in tests reliably here, so ensure mongo returned ids earlier in flow by checking no exceptions
+    ingest_col = mongo_db._db[ mongo_db.Config.MONGO_INGEST_COLLECTION ]
+    count = await ingest_col.count_documents({"email_id": {"$in": [m['id'] for m in messages]}})
+    assert count == 3
 
     # Stop polling to clean up
     await poller.stop_polling()

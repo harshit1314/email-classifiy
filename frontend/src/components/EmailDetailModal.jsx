@@ -5,9 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { 
+import {
     Loader2, Copy, ExternalLink, X, Sparkles, AlertTriangle, AlertCircle,
-    Clock, CheckCircle, Smile, Frown, Meh, Heart, Zap, Mail, Phone, 
+    Clock, CheckCircle, Smile, Frown, Meh, Heart, Zap, Mail, Phone,
     DollarSign, Calendar, User, Building2, Hash, MessageSquare
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -18,12 +18,24 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
     const [loading, setLoading] = useState(isOpen && emailId && !emailData)
     const [error, setError] = useState(null)
     const [copied, setCopied] = useState(false)
-    
+
+    // Helper to format error messages safely
+    const formatErrorMessage = (error) => {
+        if (typeof error === 'string') return error
+        if (Array.isArray(error)) {
+            return error.map(e => e.msg || JSON.stringify(e)).join(', ')
+        }
+        if (error && typeof error === 'object') {
+            return error.detail || error.message || JSON.stringify(error)
+        }
+        return 'An error occurred'
+    }
+
     // Analysis state
     const [analysis, setAnalysis] = useState(null)
     const [analyzing, setAnalyzing] = useState(false)
     const [analysisError, setAnalysisError] = useState(null)
-    
+
     // Smart reply state
     const [smartReply, setSmartReply] = useState(null)
     const [generatingReply, setGeneratingReply] = useState(false)
@@ -37,7 +49,7 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
             setError(null)
             return
         }
-        
+
         // Otherwise, fetch if modal is open and we have an ID
         if (isOpen && emailId) {
             fetchEmailDetails(emailId)
@@ -69,7 +81,7 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
     // Perform full analysis on the email
     const performAnalysis = async () => {
         if (!email) return
-        
+
         setAnalyzing(true)
         setAnalysisError(null)
         try {
@@ -82,7 +94,7 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
             })
             setAnalysis(response.data)
         } catch (err) {
-            setAnalysisError(err.response?.data?.detail || 'Analysis failed')
+            setAnalysisError(formatErrorMessage(err.response?.data?.detail || err.response?.data || 'Analysis failed'))
             console.error('Analysis error:', err)
         } finally {
             setAnalyzing(false)
@@ -92,7 +104,7 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
     // Generate smart reply
     const generateSmartReply = async () => {
         if (!email) return
-        
+
         setGeneratingReply(true)
         try {
             const response = await axios.post(`${API_URL}/api/replies/generate`, {
@@ -161,7 +173,7 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
             console.log('Fetched email details:', response.data)
             setEmail(response.data)
         } catch (err) {
-            setError(err.response?.data?.detail || 'Failed to fetch email details')
+            setError(formatErrorMessage(err.response?.data?.detail || err.response?.data || 'Failed to fetch email details'))
             console.error('Error fetching email details:', err)
         } finally {
             setLoading(false)
@@ -199,9 +211,9 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center justify-between">
+                    <DialogTitle className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                         <span>Email Details</span>
                         <button
                             onClick={onClose}
@@ -228,9 +240,9 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                 ) : email ? (
                     <div className="space-y-6">
                         {/* Email Header */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg break-words">{getEmailField('subject') || '(No Subject)'}</CardTitle>
+                        <Card className="border-t-4 border-t-blue-500 shadow-md">
+                            <CardHeader className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
+                                <CardTitle className="text-lg break-words font-semibold text-gray-900">{getEmailField('subject') || '(No Subject)'}</CardTitle>
                                 <div className="flex items-center justify-between mt-4">
                                     <div className="space-y-1 flex-1">
                                         <p className="text-sm text-muted-foreground">
@@ -245,9 +257,9 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                         </Card>
 
                         {/* Classification Results */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-sm">Classification Results</CardTitle>
+                        <Card className="border-l-4 border-l-emerald-500 shadow-md">
+                            <CardHeader className="bg-gradient-to-br from-emerald-50/50 to-teal-50/50">
+                                <CardTitle className="text-sm font-semibold text-gray-900">Classification Results</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -293,9 +305,9 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
 
                                 {/* Classification Explanation */}
                                 {getEmailField('explanation') && (
-                                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                    <div className="mt-4 p-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-md shadow-sm">
                                         <p className="text-xs text-muted-foreground uppercase font-semibold mb-2">Classification Details</p>
-                                        <p className="text-sm text-blue-900">{email.explanation}</p>
+                                        <p className="text-sm text-blue-900 leading-relaxed">{email.explanation}</p>
                                     </div>
                                 )}
 
@@ -311,11 +323,11 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                         </Card>
 
                         {/* AI Analysis Section */}
-                        <Card className="border-purple-200 bg-gradient-to-br from-purple-50/50 to-pink-50/50">
+                        <Card className="border-purple-300 border-l-4 shadow-lg bg-gradient-to-br from-purple-50 via-pink-50 to-fuchsia-50">
                             <CardHeader className="pb-3">
                                 <div className="flex items-center justify-between">
-                                    <CardTitle className="text-sm flex items-center gap-2">
-                                        <Sparkles className="h-4 w-4 text-purple-500" />
+                                    <CardTitle className="text-sm flex items-center gap-2 font-semibold text-purple-900">
+                                        <Sparkles className="h-5 w-5 text-purple-600" />
                                         AI Analysis
                                     </CardTitle>
                                     <Button
@@ -344,7 +356,7 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                                     </Button>
                                 </div>
                             </CardHeader>
-                            
+
                             {analysisError && (
                                 <CardContent>
                                     <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
@@ -442,8 +454,8 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                                             </p>
                                             <div className="grid grid-cols-1 gap-2">
                                                 {Object.entries(analysis.entities)
-                                                    .filter(([key, val]) => 
-                                                        !['total_entities', 'summary'].includes(key) && 
+                                                    .filter(([key, val]) =>
+                                                        !['total_entities', 'summary'].includes(key) &&
                                                         Array.isArray(val) && val.length > 0
                                                     )
                                                     .map(([type, values]) => {
@@ -458,8 +470,8 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                                                                     <div className="flex flex-wrap gap-1 mt-1">
                                                                         {values.slice(0, 5).map((val, i) => {
                                                                             // Handle both string values and object values with 'value' key
-                                                                            const displayValue = typeof val === 'object' && val !== null 
-                                                                                ? (val.value || JSON.stringify(val)) 
+                                                                            const displayValue = typeof val === 'object' && val !== null
+                                                                                ? (val.value || JSON.stringify(val))
                                                                                 : String(val)
                                                                             return (
                                                                                 <span key={i} className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">
@@ -498,11 +510,11 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                         </Card>
 
                         {/* Smart Reply Section */}
-                        <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50/50 to-orange-50/50">
+                        <Card className="border-amber-300 border-l-4 shadow-lg bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50">
                             <CardHeader className="pb-3">
                                 <div className="flex items-center justify-between">
-                                    <CardTitle className="text-sm flex items-center gap-2">
-                                        <MessageSquare className="h-4 w-4 text-yellow-600" />
+                                    <CardTitle className="text-sm flex items-center gap-2 font-semibold text-amber-900">
+                                        <MessageSquare className="h-5 w-5 text-amber-600" />
                                         Smart Reply
                                     </CardTitle>
                                     <Button
@@ -531,45 +543,44 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                                     </Button>
                                 </div>
                             </CardHeader>
-                            
+
                             {smartReply ? (
                                 <CardContent className="space-y-3">
                                     {/* Analysis Summary */}
                                     {smartReply.analysis && (
-                                        <div className="flex flex-wrap gap-2 p-2 bg-white/60 rounded">
-                                            <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800">
-                                                📁 {smartReply.analysis.department}
-                                            </span>
-                                            <span className={cn("text-xs px-2 py-0.5 rounded",
-                                                smartReply.analysis.priority === 'critical' ? "bg-red-100 text-red-800" :
-                                                smartReply.analysis.priority === 'high' ? "bg-orange-100 text-orange-800" :
-                                                "bg-gray-100 text-gray-600"
+                                        <div className="flex flex-wrap gap-2 p-3 bg-white/70 rounded-lg shadow-sm">
+                                            <Badge className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+                                                Dept: {smartReply.analysis.department}
+                                            </Badge>
+                                            <Badge className={cn("text-xs",
+                                                smartReply.analysis.priority === 'critical' ? "bg-red-100 text-red-800 border-red-200" :
+                                                    smartReply.analysis.priority === 'high' ? "bg-orange-100 text-orange-800 border-orange-200" :
+                                                        "bg-gray-100 text-gray-600 border-gray-200"
                                             )}>
-                                                ⚡ {smartReply.analysis.priority}
-                                            </span>
-                                            <span className={cn("text-xs px-2 py-0.5 rounded",
-                                                smartReply.analysis.sentiment === 'positive' ? "bg-green-100 text-green-800" :
-                                                smartReply.analysis.sentiment === 'negative' ? "bg-red-100 text-red-800" :
-                                                "bg-gray-100 text-gray-600"
+                                                Priority: {smartReply.analysis.priority}
+                                            </Badge>
+                                            <Badge className={cn("text-xs",
+                                                smartReply.analysis.sentiment === 'positive' ? "bg-green-100 text-green-800 border-green-200" :
+                                                    smartReply.analysis.sentiment === 'negative' ? "bg-red-100 text-red-800 border-red-200" :
+                                                        "bg-gray-100 text-gray-600 border-gray-200"
                                             )}>
-                                                {smartReply.analysis.sentiment === 'positive' ? '😊' :
-                                                 smartReply.analysis.sentiment === 'negative' ? '😠' : '😐'} {smartReply.analysis.sentiment}
-                                            </span>
+                                                Tone: {smartReply.analysis.sentiment}
+                                            </Badge>
                                         </div>
                                     )}
-                                    
+
                                     <div>
                                         <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Subject</p>
                                         <p className="text-sm font-medium bg-white/60 p-2 rounded">{smartReply.subject}</p>
                                     </div>
-                                    
+
                                     <div>
                                         <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Reply Body</p>
                                         <div className="text-sm bg-white/60 p-3 rounded whitespace-pre-wrap max-h-48 overflow-y-auto">
                                             {smartReply.body}
                                         </div>
                                     </div>
-                                    
+
                                     <Button
                                         size="sm"
                                         variant="outline"
@@ -599,12 +610,12 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                         </Card>
 
                         {/* Email Body */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-sm">Email Body</CardTitle>
+                        <Card className="border-l-4 border-l-slate-500 shadow-md">
+                            <CardHeader className="bg-gradient-to-br from-slate-50/50 to-gray-50/50">
+                                <CardTitle className="text-sm font-semibold text-gray-900">Email Body</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="bg-muted/50 p-4 rounded-lg border border-border max-h-64 overflow-y-auto whitespace-pre-wrap text-sm text-foreground">
+                                <div className="bg-muted/50 p-4 rounded-lg border border-border max-h-64 overflow-y-auto whitespace-pre-wrap text-sm text-foreground shadow-inner">
                                     {getEmailField('body') || '(No body content)'}
                                 </div>
                             </CardContent>
@@ -612,19 +623,19 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
 
                         {/* Probabilities */}
                         {(getEmailField('probabilities') && Object.keys(getEmailField('probabilities') || {}).length > 0) && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-sm">Category Probabilities</CardTitle>
+                            <Card className="border-l-4 border-l-indigo-500 shadow-md">
+                                <CardHeader className="bg-gradient-to-br from-indigo-50/50 to-violet-50/50">
+                                    <CardTitle className="text-sm font-semibold text-gray-900">Category Probabilities</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
                                     {(() => {
                                         const probs = getEmailField('probabilities') || {}
                                         const entries = Object.entries(probs)
-                                        
+
                                         // Check if probabilities are valid (sum close to 100)
                                         const sum = entries.reduce((acc, [_, val]) => acc + (parseFloat(val) > 1 ? parseFloat(val) : parseFloat(val) * 100), 0)
                                         const isValid = sum > 90 && sum < 110
-                                        
+
                                         // If invalid, normalize them
                                         let normalizedProbs = probs
                                         if (!isValid && entries.length > 0) {
@@ -634,18 +645,18 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                                                 cat,
                                                 score: Math.exp(parseFloat(val) - maxVal)
                                             }))
-                                            const totalScore = scores.reduce((acc, {score}) => acc + score, 0)
+                                            const totalScore = scores.reduce((acc, { score }) => acc + score, 0)
                                             normalizedProbs = {}
-                                            scores.forEach(({cat, score}) => {
+                                            scores.forEach(({ cat, score }) => {
                                                 normalizedProbs[cat] = (score / totalScore) * 100
                                             })
                                         }
-                                        
+
                                         return Object.entries(normalizedProbs).map(([category, prob]) => {
                                             const value = parseFloat(prob)
                                             const displayValue = isValid && value > 1 ? value : (isValid ? value : value)
                                             const barWidth = Math.max(0, Math.min(displayValue, 100))
-                                            
+
                                             return (
                                                 <div key={category}>
                                                     <div className="flex justify-between text-sm mb-1">
@@ -668,9 +679,9 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
 
                         {/* Entities */}
                         {email.entities && Object.keys(email.entities).length > 0 && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-sm">Extracted Entities</CardTitle>
+                            <Card className="border-l-4 border-l-cyan-500 shadow-md">
+                                <CardHeader className="bg-gradient-to-br from-cyan-50/50 to-sky-50/50">
+                                    <CardTitle className="text-sm font-semibold text-gray-900">Extracted Entities</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-2">
                                     {Object.entries(getEmailField('entities') || {}).map(([entityType, values]) => (
@@ -679,7 +690,9 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                                                 {entityType}
                                             </p>
                                             <p className="text-sm">
-                                                {Array.isArray(values) ? values.join(', ') : String(values)}
+                                                {Array.isArray(values) ? values.map(v =>
+                                                    typeof v === 'object' ? (v.original || v.value || v.parsed || JSON.stringify(v)) : v
+                                                ).join(', ') : String(values)}
                                             </p>
                                         </div>
                                     ))}
@@ -689,12 +702,12 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
 
                         {/* Email Metadata */}
                         {getEmailField('id') && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-sm">Email ID</CardTitle>
+                            <Card className="border-l-4 border-l-gray-500 shadow-md">
+                                <CardHeader className="bg-gradient-to-br from-gray-50/50 to-slate-50/50">
+                                    <CardTitle className="text-sm font-semibold text-gray-900">Email ID</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="flex items-center justify-between bg-muted p-2 rounded">
+                                    <div className="flex items-center justify-between bg-muted p-3 rounded-lg shadow-sm">
                                         <code className="text-xs text-muted-foreground">{getEmailField('id')}</code>
                                         <Button
                                             variant="ghost"

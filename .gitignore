@@ -142,3 +142,38 @@ backend/emails.csv
 backend/enron_parsed.csv
 *.safetensors
 *.pt
+backend/app/ml/enterprise_model/
+
+# Email Classification Database
+backend/email_classifications.db
+backend/*.db
+
+# Gmail Credentials (IMPORTANT: Never commit these!)
+backend/gmail_credentials.json
+backend/gmail_token.json
+
+# Old scripts and backups
+*.backup.*
+*.old
+*.bak
+backend/check_*.py
+backend/cleanup_*.py
+backend/compare_*.py
+backend/debug_*.py
+backend/enron_*.py
+backend/fix_*.py
+backend/migrate_*.py
+backend/notebook_*.py
+backend/preview_*.py
+backend/process_*.py
+backend/remove_*.py
+backend/reprocess_*.py
+backend/test_*.py
+backend/train_*.py
+frontend/src/*.backup.*
+
+# Documentation that gets outdated
+ENHANCEMENT_CHECKLIST.md
+GOOGLE_CLOUD_CHECKLIST.md
+IMPLEMENTATION_SUMMARY.md
+WHATS_CHANGED.md

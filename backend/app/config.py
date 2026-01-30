@@ -45,3 +45,9 @@ class Config:
     # Retention days (set to 0 to disable TTL index)
     MONGO_RETENTION_DAYS = int(os.getenv("MONGO_RETENTION_DAYS", "0"))
 
+    # Ingest & classification behavior
+    # If True, automatically trigger classification after ingest
+    AUTO_CLASSIFY_ON_INGEST = os.getenv("AUTO_CLASSIFY_ON_INGEST", "true").lower() == "true"
+    # If True, run classification asynchronously in background (will return immediately)
+    CLASSIFY_ASYNC = os.getenv("CLASSIFY_ASYNC", "false").lower() == "true"
+

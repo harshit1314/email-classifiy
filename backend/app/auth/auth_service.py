@@ -26,8 +26,8 @@ class AuthService:
     
     def __init__(self, db_path: str = "email_classifications.db"):
         self.db_path = db_path
-        # self.init_database() # Removed to prevent repeated calls per request
-        # logger.info("Auth Service initialized")
+        self.init_database()  # Initialize database on startup
+        logger.info("Auth Service initialized with database")
     
     def init_database(self):
         """Initialize users table"""
@@ -142,27 +142,31 @@ class AuthService:
     
     def authenticate_user(self, login_data: UserLogin) -> Optional[User]:
         """Authenticate user and return user if valid"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
         try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
             cursor.execute('SELECT * FROM users WHERE email = ?', (login_data.email,))
             row = cursor.fetchone()
             
             if not row:
+                logger.warning(f"Login attempt with non-existent email: {login_data.email}")
                 return None
             
             user_id, email, password_hash, full_name, is_active, created_at = row
             
             if not is_active:
+                logger.warning(f"Login attempt for inactive user: {email}")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="User account is inactive"
                 )
             
             if not self.verify_password(login_data.password, password_hash):
+                logger.warning(f"Invalid password for user: {email}")
                 return None
             
+            logger.info(f"Successful authentication for user: {email}")
             return User(
                 id=user_id,
                 email=email,
@@ -170,8 +174,17 @@ class AuthService:
                 created_at=datetime.fromisoformat(created_at) if isinstance(created_at, str) else created_at,
                 is_active=bool(is_active)
             )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Authentication error for {login_data.email}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An error occurred during authentication"
+            )
         finally:
-            conn.close()
+            if 'conn' in locals():
+                conn.close()
     
     def get_user_by_id(self, user_id: int) -> Optional[User]:
         """Get user by ID"""

@@ -1,27 +1,40 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '@/context/AuthContext'
+import { Calendar } from '@/components/ui/calendar'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Calendar } from '@/components/ui/calendar'
-import { Loader2, Calendar as CalendarIcon, MapPin, Clock, Plus, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Loader2, CalendarDays, Plus, Sparkles, Clock, MapPin, Users, Mail } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { useToast } from "@/components/ui/use-toast"
 
 const CalendarPage = () => {
     const { API_URL, token } = useAuth()
-    const [events, setEvents] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [selectedDate, setSelectedDate] = useState(new Date())
-    const [currentMonth, setCurrentMonth] = useState(new Date())
+    const { toast } = useToast()
 
-    // Extraction State
-    const [extractText, setExtractText] = useState('')
+    // Helper to format error messages safely
+    const formatErrorMessage = (error) => {
+        if (typeof error === 'string') return error
+        if (Array.isArray(error)) {
+            return error.map(e => e.msg || JSON.stringify(e)).join(', ')
+        }
+        if (error && typeof error === 'object') {
+            return error.detail || error.message || JSON.stringify(error)
+        }
+        return 'An error occurred'
+    }
+
+    const [date, setDate] = useState(new Date())
+    const [events, setEvents] = useState([])
+    const [emailText, setEmailText] = useState('')
     const [extracting, setExtracting] = useState(false)
 
+    useEffect(() => {
+        fetchEvents()
+    }, [])
+
     const fetchEvents = async () => {
-        setLoading(true)
         try {
             const response = await axios.get(`${API_URL}/api/calendar/events`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -29,264 +42,205 @@ const CalendarPage = () => {
             setEvents(response.data.events || [])
         } catch (err) {
             console.error('Failed to fetch events:', err)
-        } finally {
-            setLoading(false)
         }
     }
 
-    useEffect(() => {
-        fetchEvents()
-    }, [])
-
-    // Get events for selected date
-    const getEventsForDate = (date) => {
-        if (!date) return []
-        return events.filter(event => {
-            const eventDate = new Date(event.start_time)
-            return eventDate.toDateString() === date.toDateString()
-        })
-    }
-
-    // Check if a date has events
-    const hasEvents = (date) => {
-        return events.some(event => {
-            const eventDate = new Date(event.start_time)
-            return eventDate.toDateString() === date.toDateString()
-        })
-    }
-
-    const selectedDateEvents = getEventsForDate(selectedDate)
-
-    const handleExtract = async (e) => {
-        e.preventDefault()
-        if (!extractText.trim()) return
+    const handleExtractMeeting = async () => {
+        if (!emailText.trim()) {
+            toast({
+                variant: "destructive",
+                title: "No Content",
+                description: "Please paste email content first"
+            })
+            return
+        }
 
         setExtracting(true)
         try {
-            const response = await axios.post(`${API_URL}/api/calendar/extract-meeting`, {
-                email_body: extractText,
-                email_subject: "Manual Extraction"
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
+            const response = await axios.post(
+                `${API_URL}/api/calendar/extract-meeting`,
+                { email_text: emailText },
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+            
+            toast({
+                title: "Meeting Extracted",
+                description: `Found ${response.data.meetings?.length || 0} meeting(s)`,
             })
-
-            if (response.data.meeting_found) {
-                alert('Meeting found and added to calendar!')
-                setExtractText('')
-                fetchEvents()
-            } else {
-                alert('No meeting details found in the text.')
+            
+            if (response.data.meetings && response.data.meetings.length > 0) {
+                setEvents(prev => [...prev, ...response.data.meetings])
+                setEmailText('')
             }
         } catch (err) {
-            alert('Failed to extract meeting: ' + (err.response?.data?.detail || err.message))
+            toast({
+                variant: "destructive",
+                title: "Extraction Failed",
+                description: formatErrorMessage(err.response?.data?.detail || err.response?.data || err.message)
+            })
         } finally {
             setExtracting(false)
         }
     }
 
-    // Navigation handlers
-    const goToPreviousMonth = () => {
-        setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
-    }
-
-    const goToNextMonth = () => {
-        setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
-    }
-
-    const goToToday = () => {
-        const today = new Date()
-        setCurrentMonth(today)
-        setSelectedDate(today)
-    }
+    const upcomingEvents = events
+        .filter(event => {
+            const eventDate = new Date(event.start_time || event.start || event.date)
+            return eventDate >= new Date()
+        })
+        .sort((a, b) => {
+            const dateA = new Date(a.start_time || a.start || a.date)
+            const dateB = new Date(b.start_time || b.start || b.date)
+            return dateA - dateB
+        })
+        .slice(0, 5)
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Calendar</h2>
-                <Button variant="outline" onClick={fetchEvents}>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Refresh
-                </Button>
-            </div>
+        <div className="flex-1 flex flex-col h-screen bg-transparent">
+            <div className="flex-1 overflow-y-auto">
+                <div className="p-6 space-y-6">
+                    <div>
+                        <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+                            Calendar
+                        </h2>
+                        <p className="text-sm text-muted-foreground">Manage your schedule and extract meetings from emails</p>
+                    </div>
 
-            <div className="grid gap-6 lg:grid-cols-3">
-                {/* Calendar Widget */}
-                <div className="lg:col-span-2 space-y-4">
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="text-lg">
-                                    {currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                                </CardTitle>
-                                <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm" onClick={goToToday}>
-                                        Today
-                                    </Button>
-                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPreviousMonth}>
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextMonth}>
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <Calendar
-                                mode="single"
-                                selected={selectedDate}
-                                onSelect={setSelectedDate}
-                                month={currentMonth}
-                                onMonthChange={setCurrentMonth}
-                                className="rounded-md border w-full"
-                                classNames={{
-                                    month: "space-y-4 w-full",
-                                    month_caption: "hidden",
-                                    month_grid: "w-full border-collapse",
-                                    weekdays: "flex w-full",
-                                    weekday: "text-muted-foreground font-normal text-sm flex-1 text-center py-2",
-                                    week: "flex w-full",
-                                    day: "flex-1 text-center p-0 relative",
-                                    day_button: "w-full h-12 p-0 font-normal hover:bg-accent rounded-md",
-                                    selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
-                                    today: "bg-accent text-accent-foreground font-bold",
-                                    outside: "text-muted-foreground opacity-50",
-                                }}
-                                modifiers={{
-                                    hasEvent: (date) => hasEvents(date)
-                                }}
-                                modifiersClassNames={{
-                                    hasEvent: "after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-blue-500 after:rounded-full"
-                                }}
-                            />
-                        </CardContent>
-                    </Card>
-
-                    {/* Selected Date Events */}
-                    <Card>
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <CalendarIcon className="h-5 w-5" />
-                                {selectedDate ? selectedDate.toLocaleDateString('default', { 
-                                    weekday: 'long', 
-                                    month: 'long', 
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                }) : 'Select a date'}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {loading ? (
-                                <div className="flex justify-center p-4">
-                                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                                </div>
-                            ) : selectedDateEvents.length === 0 ? (
-                                <p className="text-muted-foreground text-center py-4">
-                                    No events scheduled for this day.
-                                </p>
-                            ) : (
-                                <div className="space-y-3">
-                                    {selectedDateEvents.map((event) => (
-                                        <div key={event.id} className="flex gap-3 p-3 bg-accent/30 rounded-lg">
-                                            <div className="flex flex-col items-center justify-center min-w-[50px] bg-primary/10 rounded-md p-2 text-primary">
-                                                <Clock className="h-4 w-4 mb-1" />
-                                                <span className="text-xs font-bold">
-                                                    {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </span>
-                                            </div>
-                                            <div className="flex-1">
-                                                <h4 className="font-semibold">{event.summary}</h4>
-                                                {event.location && (
-                                                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                                                        <MapPin className="h-3 w-3" />
-                                                        {event.location}
-                                                    </p>
-                                                )}
-                                                {event.description && (
-                                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                                        {event.description}
-                                                    </p>
-                                                )}
-                                            </div>
+                    <div className="grid gap-6 md:grid-cols-3">
+                        {/* Calendar Widget */}
+                        <div className="md:col-span-2">
+                            <Card className="border-0 shadow-lg bg-white/90 backdrop-blur">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-2xl">
+                                        <div className="rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 p-2">
+                                            <CalendarDays className="h-5 w-5 text-white" />
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
+                                        Your Calendar
+                                    </CardTitle>
+                                    <CardDescription>Select a date to view or add events</CardDescription>
+                                </CardHeader>
+                                <CardContent className="flex justify-center">
+                                    <div className="rounded-xl border-2 border-gray-100 p-4 bg-gradient-to-br from-blue-50/50 to-cyan-50/50">
+                                        <Calendar
+                                            mode="single"
+                                            selected={date}
+                                            onSelect={setDate}
+                                            className="rounded-lg"
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
 
-                {/* Right Sidebar */}
-                <div className="space-y-6">
-                    {/* Upcoming Events Summary */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-base">Upcoming Events</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {loading ? (
-                                <div className="flex justify-center p-4">
-                                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                                </div>
-                            ) : events.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-2">
-                                    No upcoming events.
-                                </p>
-                            ) : (
-                                <div className="space-y-2">
-                                    {events.slice(0, 5).map((event) => (
-                                        <div 
-                                            key={event.id} 
-                                            className="p-2 rounded hover:bg-accent/50 cursor-pointer transition-colors"
-                                            onClick={() => {
-                                                const eventDate = new Date(event.start_time)
-                                                setSelectedDate(eventDate)
-                                                setCurrentMonth(eventDate)
-                                            }}
-                                        >
-                                            <p className="font-medium text-sm truncate">{event.summary}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {new Date(event.start_time).toLocaleDateString('default', { 
-                                                    month: 'short', 
-                                                    day: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </p>
+                        {/* Upcoming Events Sidebar */}
+                        <div>
+                            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white h-full">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-xl text-white">
+                                        <Clock className="h-5 w-5" />
+                                        Upcoming Events
+                                    </CardTitle>
+                                    <CardDescription className="text-blue-100">Next 5 scheduled events</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    {upcomingEvents.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {upcomingEvents.map((event, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className="group rounded-lg bg-white/20 backdrop-blur border border-white/30 p-4 hover:bg-white/30 transition-all duration-200 hover:scale-105"
+                                                >
+                                                    <h4 className="font-semibold text-white mb-2 flex items-center gap-2">
+                                                        <div className="w-2 h-2 rounded-full bg-yellow-300 animate-pulse"></div>
+                                                        {event.title || event.summary || 'Untitled Event'}
+                                                    </h4>
+                                                    <div className="space-y-1 text-sm text-blue-50">
+                                                        <p className="flex items-center gap-2">
+                                                            <Clock className="h-3 w-3" />
+                                                            {new Date(event.start_time || event.start || event.date).toLocaleString()}
+                                                        </p>
+                                                        {event.location && (
+                                                            <p className="flex items-center gap-2">
+                                                                <MapPin className="h-3 w-3" />
+                                                                {event.location}
+                                                            </p>
+                                                        )}
+                                                        {event.attendees && (
+                                                            <p className="flex items-center gap-2">
+                                                                <Users className="h-3 w-3" />
+                                                                {event.attendees.length} attendee(s)
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                    {events.length > 5 && (
-                                        <p className="text-xs text-muted-foreground text-center pt-2">
-                                            +{events.length - 5} more events
-                                        </p>
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <CalendarDays className="h-12 w-12 mx-auto mb-3 text-white/50" />
+                                            <p className="text-blue-100">No upcoming events</p>
+                                            <p className="text-xs text-blue-200 mt-1">Extract meetings from emails below</p>
+                                        </div>
                                     )}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
 
                     {/* AI Meeting Extraction */}
-                    <Card>
+                    <Card className="border-0 shadow-lg bg-white/90 backdrop-blur">
                         <CardHeader>
-                            <CardTitle className="text-base">AI Meeting Extraction</CardTitle>
-                            <CardDescription className="text-xs">Paste email content to automatically extract and schedule meetings.</CardDescription>
+                            <CardTitle className="flex items-center gap-2 text-2xl">
+                                <div className="rounded-full bg-gradient-to-br from-purple-500 to-pink-600 p-2">
+                                    <Sparkles className="h-5 w-5 text-white" />
+                                </div>
+                                AI Meeting Extraction
+                            </CardTitle>
+                            <CardDescription>Paste email content to automatically extract meeting details</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <form onSubmit={handleExtract} className="space-y-4">
+                            <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label className="text-sm">Email Content</Label>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-semibold">Email Content</label>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                            <Mail className="h-3 w-3" />
+                                            <span>Powered by AI</span>
+                                        </div>
+                                    </div>
                                     <Textarea
-                                        placeholder="e.g. 'Lets meet tomorrow at 2pm for the project review'"
-                                        className="min-h-[120px] text-sm"
-                                        value={extractText}
-                                        onChange={(e) => setExtractText(e.target.value)}
+                                        placeholder="Paste email text here... AI will extract meeting details like date, time, location, and attendees."
+                                        value={emailText}
+                                        onChange={e => setEmailText(e.target.value)}
+                                        rows={8}
+                                        className="resize-none font-mono text-sm"
                                     />
                                 </div>
-                                <Button className="w-full" type="submit" disabled={extracting || !extractText.trim()}>
-                                    {extracting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-                                    Extract & Schedule
+
+                                <div className="rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 p-4">
+                                    <p className="text-sm text-purple-900">
+                                        <strong>Tip:</strong> The AI can extract meeting information including date, time, location, attendees, and agenda from natural language text.
+                                    </p>
+                                </div>
+
+                                <Button
+                                    onClick={handleExtractMeeting}
+                                    disabled={extracting || !emailText.trim()}
+                                    className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg"
+                                >
+                                    {extracting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                            Extracting Meeting Details...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="mr-2 h-5 w-5" />
+                                            Extract Meeting
+                                        </>
+                                    )}
                                 </Button>
-                            </form>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

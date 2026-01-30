@@ -15,6 +15,18 @@ const EmailClassifyPage = () => {
     const [result, setResult] = useState(null)
     const [error, setError] = useState(null)
 
+    // Helper to format error messages safely
+    const formatErrorMessage = (error) => {
+        if (typeof error === 'string') return error
+        if (Array.isArray(error)) {
+            return error.map(e => e.msg || JSON.stringify(e)).join(', ')
+        }
+        if (error && typeof error === 'object') {
+            return error.detail || error.message || JSON.stringify(error)
+        }
+        return 'An error occurred'
+    }
+
     const [email, setEmail] = useState({
         subject: '',
         body: '',
@@ -35,7 +47,7 @@ const EmailClassifyPage = () => {
             })
             setResult(response.data)
         } catch (err) {
-            setError(err.response?.data?.detail || 'Classification failed')
+            setError(formatErrorMessage(err.response?.data?.detail || err.response?.data || 'Classification failed'))
         } finally {
             setLoading(false)
         }

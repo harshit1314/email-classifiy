@@ -22,6 +22,7 @@ PyJWT>=2.8.0
 email-validator>=2.0.0
 textblob>=0.17.1
 datasets>=2.14.0
+motor>=3.3.0
 # pin accelerate to a PyPI-available version for this environment
 accelerate>=1.12.0
 

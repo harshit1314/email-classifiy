@@ -15,6 +15,18 @@ const FiltersPage = () => {
     const [newKeyword, setNewKeyword] = useState('')
     const [actionLoading, setActionLoading] = useState(false)
 
+    // Helper to format error messages safely
+    const formatErrorMessage = (error) => {
+        if (typeof error === 'string') return error
+        if (Array.isArray(error)) {
+            return error.map(e => e.msg || JSON.stringify(e)).join(', ')
+        }
+        if (error && typeof error === 'object') {
+            return error.detail || error.message || JSON.stringify(error)
+        }
+        return 'An error occurred'
+    }
+
     const fetchFilters = async () => {
         try {
             const response = await axios.get(`${API_URL}/api/filters`)
@@ -42,7 +54,7 @@ const FiltersPage = () => {
             setNewSender('')
             await fetchFilters()
         } catch (err) {
-            setError('Failed to add sender: ' + (err.response?.data?.detail || err.message))
+            setError('Failed to add sender: ' + formatErrorMessage(err.response?.data?.detail || err.response?.data || err.message))
         } finally {
             setActionLoading(false)
         }
@@ -57,7 +69,7 @@ const FiltersPage = () => {
             await axios.delete(`${API_URL}/api/filters/sender`, { data: { sender } })
             await fetchFilters()
         } catch (err) {
-            setError('Failed to remove sender: ' + (err.response?.data?.detail || err.message))
+            setError('Failed to remove sender: ' + formatErrorMessage(err.response?.data?.detail || err.response?.data || err.message))
         } finally {
             setActionLoading(false)
         }
@@ -73,7 +85,7 @@ const FiltersPage = () => {
             setNewKeyword('')
             await fetchFilters()
         } catch (err) {
-            setError('Failed to add keyword: ' + (err.response?.data?.detail || err.message))
+            setError('Failed to add keyword: ' + formatErrorMessage(err.response?.data?.detail || err.response?.data || err.message))
         } finally {
             setActionLoading(false)
         }
@@ -87,7 +99,7 @@ const FiltersPage = () => {
             await axios.delete(`${API_URL}/api/filters/subject`, { data: { keyword } })
             await fetchFilters()
         } catch (err) {
-            setError('Failed to remove keyword: ' + (err.response?.data?.detail || err.message))
+            setError('Failed to remove keyword: ' + formatErrorMessage(err.response?.data?.detail || err.response?.data || err.message))
         } finally {
             setActionLoading(false)
         }

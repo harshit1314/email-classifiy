@@ -99,6 +99,18 @@ class DatabaseLogger:
         except sqlite3.OperationalError:
             pass
         
+        # Performance optimization: Add indexes for frequently queried columns
+        try:
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_category ON classifications(category)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_timestamp ON classifications(timestamp DESC)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_department ON classifications(department)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_id ON classifications(user_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_sender ON classifications(email_sender)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_confidence ON classifications(confidence)')
+            logger.info("✅ Performance indexes created successfully")
+        except sqlite3.OperationalError as e:
+            logger.debug(f"Index creation skipped (may already exist): {e}")
+        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS action_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -255,12 +267,19 @@ class DatabaseLogger:
                           user_id: Optional[int] = None, search_query: Optional[str] = None,
                           department: Optional[str] = None, start_date: Optional[str] = None,
                           end_date: Optional[str] = None, min_confidence: Optional[float] = None,
-                          sender: Optional[str] = None) -> List[Dict]:
-        """Get recent classifications with optional filtering"""
+                          sender: Optional[str] = None, offset: int = 0) -> List[Dict]:
+        """
+        Get recent classifications with optional filtering and pagination
+        
+        Performance improvements:
+        - Added offset parameter for pagination
+        - Uses LIMIT and OFFSET for efficient data retrieval
+        """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        query = "SELECT * FROM classifications WHERE 1=1"
+        # Exclude pending/unclassified emails - only show successfully classified ones
+        query = "SELECT * FROM classifications WHERE category IS NOT NULL AND category != 'pending' AND category != ''"
         params = []
         
         if user_id:
@@ -299,8 +318,9 @@ class DatabaseLogger:
             query += " AND email_sender LIKE ?"
             params.append(f"%{sender}%")
         
-        query += " ORDER BY timestamp DESC LIMIT ?"
+        query += " ORDER BY timestamp DESC LIMIT ? OFFSET ?"
         params.append(limit)
+        params.append(offset)
         
         logger.info(f"Executing search query: {query} with params: {params}")
         

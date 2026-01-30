@@ -25,7 +25,7 @@ class EmailPoller:
         self.polling_active = False
         self.polling_task = None
         self.poll_interval = 30  # seconds
-        self.batch_size = 20     # emails per poll
+        self.batch_size = 200    # emails per poll (increased from 20 to 200)
         self.last_check_time = {}
         self.processed_emails = set()  # Track processed emails to avoid duplicates
         
@@ -50,16 +50,22 @@ class EmailPoller:
         self.batch_size = batch_size
         self.last_check_time['gmail'] = datetime.now()
 
-        # Immediately fetch a batch of recent emails and ingest them (backfill on connect)
+        # Immediately fetch a batch of recent emails and store in MongoDB (backfill on connect)
         try:
             logger.info("Performing immediate Gmail backfill after connect")
             recent_emails = await self.gmail_server.fetch_emails(limit=self.batch_size, query="is:unread OR is:inbox")
             backfilled = 0
+            
+            # Import MongoDB helper
+            from app.database import mongo as mongo_db
+            
             for email_data in recent_emails:
                 email_id = email_data.get('id')
-                if not email_id or email_id in self.processed_emails:
+                if not email_id:
                     continue
+                    
                 try:
+                    # Create email object for filtering
                     email_obj = EmailData(
                         subject=email_data.get('subject', ''),
                         body=email_data.get('body', ''),
@@ -69,19 +75,41 @@ class EmailPoller:
                         date=datetime.now()
                     )
 
+                    # Check filters
                     if not self.filter_service.should_process(email_obj):
-                        self.processed_emails.add(email_id)
+                        logger.info(f"Skipped filtered email during backfill: {email_data.get('subject', '')[:30]}...")
                         continue
 
-                    await self.ingestion_service.receive_email(email_obj)
-                    self.processed_emails.add(email_id)
-                    backfilled += 1
+                    # Store in MongoDB first (with duplicate prevention)
+                    if mongo_db.is_enabled():
+                        mongo_doc = {
+                            "email_id": email_id,
+                            "subject": email_data.get('subject', ''),
+                            "sender": email_data.get('from', ''),
+                            "body": email_data.get('body', ''),
+                            "headers": email_data.get('headers', {}),
+                        }
+                        inserted_id = await mongo_db.log_ingested_email(mongo_doc)
+                        
+                        if inserted_id:
+                            logger.info(f"Stored email in MongoDB: {email_id}")
+                            # Trigger classification for the newly stored email
+                            await self.ingestion_service.receive_email(email_obj)
+                            backfilled += 1
+                        else:
+                            logger.info(f"Email {email_id} already exists in MongoDB, skipping duplicate")
+                    else:
+                        # Fallback: process directly if MongoDB not available
+                        await self.ingestion_service.receive_email(email_obj)
+                        backfilled += 1
+                        
                 except Exception as e:
                     logger.error(f"Error backfilling email {email_id}: {e}")
                     continue
 
             if backfilled:
-                logger.info(f"Backfilled {backfilled} Gmail emails on connect")
+                logger.info(f"Backfilled {backfilled} new Gmail emails to MongoDB on connect")
+
         except Exception as e:
             logger.warning(f"Gmail backfill failed: {e}")
 
@@ -89,10 +117,10 @@ class EmailPoller:
             self.polling_active = True
             self.polling_task = asyncio.create_task(self._poll_emails('gmail'))
             logger.info(f"Started Gmail polling with {interval}s interval and limit {batch_size}")
-            return True
+            return {"started": True, "backfilled": backfilled}
         else:
             logger.info("Polling already active")
-            return True
+            return {"started": True, "backfilled": backfilled}
     
     async def start_outlook_polling(self, credentials: Dict, interval: int = 30, batch_size: int = 20):
         """Start polling Outlook for new emails"""
@@ -171,12 +199,13 @@ class EmailPoller:
                 
                 logger.info(f"Polling {provider}: Found {len(emails)} emails")
                 
-                # Process each email
+                # Process each email - store in MongoDB first
+                from app.database import mongo as mongo_db
+                
                 for email_data in emails:
                     email_id = email_data.get('id')
                     
-                    # Skip if already processed
-                    if email_id in self.processed_emails:
+                    if not email_id:
                         continue
                     
                     try:
@@ -192,17 +221,30 @@ class EmailPoller:
 
                         # Check filters
                         if not self.filter_service.should_process(email_obj):
-                            self.processed_emails.add(email_id)
                             logger.info(f"Skipped filtered email: {email_data.get('subject', 'No subject')[:30]}...")
                             continue
                         
-                        # Ingest email through ingestion service
-                        await self.ingestion_service.receive_email(email_obj)
-                        
-                        # Mark as processed
-                        self.processed_emails.add(email_id)
-                        
-                        logger.info(f"Processed email: {email_data.get('subject', 'No subject')[:50]}")
+                        # Store in MongoDB first (with duplicate prevention)
+                        if mongo_db.is_enabled():
+                            mongo_doc = {
+                                "email_id": email_id,
+                                "subject": email_data.get('subject', ''),
+                                "sender": email_data.get('from', ''),
+                                "body": email_data.get('body', ''),
+                                "headers": email_data.get('headers', {}),
+                            }
+                            inserted_id = await mongo_db.log_ingested_email(mongo_doc)
+                            
+                            if inserted_id:
+                                logger.info(f"Stored new email in MongoDB: {email_data.get('subject', 'No subject')[:50]}")
+                                # Trigger classification for the newly stored email
+                                await self.ingestion_service.receive_email(email_obj)
+                            else:
+                                logger.info(f"Email {email_id} already in MongoDB, skipping duplicate")
+                        else:
+                            # Fallback: process directly if MongoDB not available
+                            await self.ingestion_service.receive_email(email_obj)
+                            logger.info(f"Processed email (no MongoDB): {email_data.get('subject', 'No subject')[:50]}")
                         
                     except Exception as e:
                         logger.error(f"Error processing email {email_id}: {e}")

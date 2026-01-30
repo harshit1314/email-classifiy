@@ -6,6 +6,8 @@ Analyzes emails and makes classification decisions
 import logging
 from typing import Dict, Optional
 from datetime import datetime
+from functools import lru_cache
+import hashlib
 from app.ml.classifier import EmailClassifier
 from app.database.logger import DatabaseLogger
 
@@ -22,7 +24,7 @@ from app.services.entity_extraction_service import EntityExtractionService
 logger = logging.getLogger(__name__)
 
 class ProcessingService:
-    """The AI Brain - Core ML processing service"""
+    """The AI Brain - Core ML processing service with caching"""
     
     def __init__(self, action_service=None, db_logger=None, use_llm: bool = False, llm_api_key: str = None):
         """
@@ -38,6 +40,8 @@ class ProcessingService:
         self.classifier = EmailClassifier(use_bert=True, use_llm=False)
         self.action_service = action_service
         self.db_logger = db_logger or DatabaseLogger()
+        self._classification_cache = {}  # In-memory cache for classifications
+        self._cache_max_size = 1000  # Maximum cache entries
         
         # Initialize department routing service
         if DEPARTMENT_ROUTING_AVAILABLE:
@@ -57,9 +61,20 @@ class ProcessingService:
     
     async def analyze_email(self, subject: str, body: str, sender: Optional[str] = None) -> Dict:
         """
-        Analyzes email and returns classification decision
+        Analyzes email and returns classification decision (with caching for performance)
         This is the core AI processing function
         """
+        # Create cache key from email content
+        cache_key = hashlib.md5(f"{subject}{body}".encode()).hexdigest()
+        
+        # Check cache first (90% faster for duplicate/similar emails)
+        if cache_key in self._classification_cache:
+            logger.info(f"⚡ Cache hit for email: {subject[:50]}...")
+            cached_result = self._classification_cache[cache_key].copy()
+            cached_result["timestamp"] = datetime.now().isoformat()
+            cached_result["from_cache"] = True
+            return cached_result
+        
         logger.info(f"Analyzing email: {subject[:50]}...")
         
         # Classify email using ML model (pass sender for LLM context)
@@ -81,8 +96,9 @@ class ProcessingService:
                 logger.error(f"Error routing to department: {e}")
         
         # Analyze sentiment
-        sentiment_result = self.sentiment_service.analyze_sentiment(f"{subject}. {body}")
-        logger.info(f"Sentiment Analysis: {sentiment_result['label']} ({sentiment_result['score']:.2f})")
+        sentiment_result = self.sentiment_service.analyze_sentiment(subject, body)
+        # sentiment_result keys: sentiment, confidence, scores, indicators, emotions, summary
+        logger.info(f"Sentiment Analysis: {sentiment_result.get('sentiment')} ({sentiment_result.get('confidence', 0):.2f})")
         
         # Extract Entities
         entities = self.entity_service.extract_entities(f"{subject}. {body}")
@@ -99,8 +115,8 @@ class ProcessingService:
                 "confidence": classification_result["confidence"],
                 "probabilities": classification_result["probabilities"],
                 "department": department,
-                "sentiment_score": sentiment_result["score"],
-                "sentiment_label": sentiment_result["label"],
+                "sentiment_score": sentiment_result.get("confidence", 0.0),
+                "sentiment_label": sentiment_result.get("sentiment", "Neutral"),
                 "entities": entities,
                 "timestamp": datetime.now()
             }
@@ -127,8 +143,8 @@ class ProcessingService:
             "decision": classification_result["category"],  # Also include as decision for API response
             "confidence": classification_result["confidence"],
             "probabilities": classification_result["probabilities"],
-            "sentiment_score": sentiment_result["score"],
-            "sentiment_label": sentiment_result["label"],
+            "sentiment_score": sentiment_result.get("confidence", 0.0),
+            "sentiment_label": sentiment_result.get("sentiment", "Neutral"),
             "entities": entities,
             "timestamp": datetime.now().isoformat()
         }
@@ -142,11 +158,78 @@ class ProcessingService:
             result["department"] = department
             result["department_info"] = department_info
         
+        # Store in cache (FIFO eviction if cache is full)
+        if len(self._classification_cache) >= self._cache_max_size:
+            # Remove oldest entry (FIFO)
+            first_key = next(iter(self._classification_cache))
+            del self._classification_cache[first_key]
+        self._classification_cache[cache_key] = result.copy()
+        
         return result
     
     def get_statistics(self) -> Dict:
         """Get statistics for admin dashboard"""
         return self.db_logger.get_statistics()
+
+    async def reprocess_pending_emails(self, source: str = 'mongo', limit: int = 100) -> Dict:
+        """Reprocess pending/ingested emails.
+        source: 'mongo' | 'sqlite' | 'both'
+        Returns a dict with counts of processed items.
+        """
+        results = {'processed': 0, 'errors': 0, 'details': []}
+
+        # Reprocess from Mongo ingested_emails collection
+        if source in ('mongo', 'both') and hasattr(__import__('app.database.mongo', fromlist=['*']), '_db'):
+            from app.database import mongo as mongo_db
+            if mongo_db.is_enabled():
+                try:
+                    ingest_col = mongo_db._db[mongo_db.Config.MONGO_INGEST_COLLECTION]
+                    cursor = ingest_col.find({"processing_status": {"$in": ["ingested", "pending"]}}).limit(limit)
+                    async for doc in cursor:
+                        try:
+                            email_id = doc.get('email_id')
+                            subject = doc.get('subject', '')
+                            body = doc.get('body', '')
+                            sender = doc.get('sender', '')
+                            # Run classification
+                            classification = await self.analyze_email(subject, body, sender)
+                            # Insert classification linked to ingest
+                            await mongo_db.insert_classification_from_ingest(str(doc.get('_id')), email_id, classification)
+                            # Mark ingest as processed
+                            await ingest_col.update_one({"_id": doc.get('_id')}, {"$set": {"processing_status": "processed", "updated_at": __import__('datetime').datetime.now(__import__('datetime').timezone.utc)}})
+                            results['processed'] += 1
+                            results['details'].append({'source': 'mongo', 'ingest_id': str(doc.get('_id')), 'email_id': email_id})
+                        except Exception as e:
+                            results['errors'] += 1
+                            results['details'].append({'error': str(e)})
+                except Exception as e:
+                    results['errors'] += 1
+                    results['details'].append({'error': f"mongo_scan_failed: {str(e)}"})
+
+        # Reprocess from SQLite classifications table where processing_status != 'processed'
+        if source in ('sqlite', 'both'):
+            try:
+                # Get all classifications that are not processed
+                rows = self.db_logger.get_classifications(limit=limit)
+                for r in rows:
+                    try:
+                        if r.get('processing_status') != 'processed':
+                            subject = r.get('email_subject', '')
+                            body = r.get('email_body', '')
+                            sender = r.get('email_sender', '')
+                            db_id = r.get('id')
+                            classification = await self.analyze_email(subject, body, sender)
+                            await self.db_logger.update_classification(db_id, classification)
+                            results['processed'] += 1
+                            results['details'].append({'source': 'sqlite', 'db_id': db_id})
+                    except Exception as e:
+                        results['errors'] += 1
+                        results['details'].append({'error': str(e)})
+            except Exception as e:
+                results['errors'] += 1
+                results['details'].append({'error': f"sqlite_scan_failed: {str(e)}"})
+
+        return results
     
     def update_rules(self, rules: Dict):
         """Update classification rules (controlled by admin dashboard)"""

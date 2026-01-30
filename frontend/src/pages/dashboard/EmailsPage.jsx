@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
-import { RefreshCw, Search, Filter, Loader2, Sparkles, Copy, Check, X } from 'lucide-react'
+import { RefreshCw, Search, Filter, Loader2, Sparkles, Copy, Check, X, Mail } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { format } from 'date-fns'
@@ -37,10 +37,23 @@ const EmailsPage = () => {
     const [detailModalOpen, setDetailModalOpen] = useState(false)
     const [activeTab, setActiveTab] = useState('classified')
     const [selectedCategory, setSelectedCategory] = useState('all')
+
+    // Helper to format error messages safely
+    const formatErrorMessage = (error) => {
+        if (typeof error === 'string') return error
+        if (Array.isArray(error)) {
+            return error.map(e => e.msg || JSON.stringify(e)).join(', ')
+        }
+        if (error && typeof error === 'object') {
+            return error.detail || error.message || JSON.stringify(error)
+        }
+        return 'An error occurred'
+    }
+
     const [stats, setStats] = useState({
         category_breakdown: {}
     })
-    
+
     // Search & Filter State
     const [searchQuery, setSearchQuery] = useState('')
     const [showFilters, setShowFilters] = useState(false)
@@ -65,9 +78,10 @@ const EmailsPage = () => {
             // Calculate category breakdown from classifications
             const categories = {}
             let classifiedCount = 0
-            
+
             classRes.data.classifications?.forEach(email => {
-                if (email.category) {
+                // Only count valid categories (exclude pending, null, or empty)
+                if (email.category && email.category !== 'pending' && email.category.trim() !== '') {
                     categories[email.category] = (categories[email.category] || 0) + 1
                     classifiedCount += 1
                 }
@@ -93,10 +107,10 @@ const EmailsPage = () => {
 
     const handleSearch = async (e) => {
         e?.preventDefault()
-        
+
         // Check if any filter is active
         const hasFilters = searchQuery.trim() || sender || dateRange.from || dateRange.to || minConfidence[0] > 0
-        
+
         if (!hasFilters) {
             setSearchResults(null)
             return
@@ -105,7 +119,7 @@ const EmailsPage = () => {
         setIsSearching(true)
         try {
             const params = {}
-            
+
             // Add filters only if they have values
             if (searchQuery.trim()) {
                 params.query = searchQuery.trim()
@@ -122,15 +136,15 @@ const EmailsPage = () => {
             if (minConfidence[0] > 0) {
                 params.min_confidence = minConfidence[0] / 100
             }
-            
-            params.limit = 100
+
+            params.limit = 500
 
             const response = await axios.get(`${API_URL}/api/search`, {
                 params,
                 headers: { Authorization: `Bearer ${token}` }
             })
             setSearchResults(response.data.results || [])
-            
+
             if (response.data.results && response.data.results.length === 0) {
                 toast({
                     title: "No results found",
@@ -142,7 +156,7 @@ const EmailsPage = () => {
             toast({
                 variant: "destructive",
                 title: "Search failed",
-                description: err.response?.data?.detail || "Could not perform search.",
+                description: formatErrorMessage(err.response?.data?.detail || err.response?.data || "Could not perform search."),
             })
         } finally {
             setIsSearching(false)
@@ -200,7 +214,7 @@ const EmailsPage = () => {
     // Auto-search when filters change
     useEffect(() => {
         const hasFilters = searchQuery.trim() || sender || dateRange.from || dateRange.to || minConfidence[0] > 0
-        
+
         if (!hasFilters) {
             setSearchResults(null)
             return
@@ -231,35 +245,39 @@ const EmailsPage = () => {
             customer_service: "bg-indigo-100 text-indigo-800",
             operations: "bg-teal-100 text-teal-800",
             executive: "bg-rose-100 text-rose-800",
-            general: "bg-gray-100 text-gray-700",
-            // Status
-            pending: "bg-yellow-100 text-yellow-800",
-            unclassified: "bg-gray-100 text-gray-500"
+            general: "bg-gray-100 text-gray-700"
         }
         return colors[category?.toLowerCase()] || "bg-gray-100 text-gray-800"
     }
 
-    const filteredEmails = selectedCategory === 'all' 
-        ? allClassifications 
+    const filteredEmails = selectedCategory === 'all'
+        ? allClassifications
         : allClassifications.filter(email => email.category === selectedCategory)
 
     return (
-        <div className="flex-1 flex flex-col h-screen bg-background">
+        <div className="flex-1 flex flex-col h-screen bg-transparent">
             <div className="flex-1 overflow-y-auto">
                 <div className="p-6 space-y-6">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                        <h2 className="text-3xl font-bold tracking-tight">
-                            {searchResults !== null ? 'Search Results' : 'All Emails'}
-                        </h2>
+                        <div>
+                            <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                                {searchResults !== null ? 'Search Results' : 'All Emails'}
+                            </h2>
+                            <p className="text-sm text-muted-foreground">
+                                {searchResults !== null 
+                                    ? `Found ${searchResults.length} matching emails` 
+                                    : `Manage and classify your emails`}
+                            </p>
+                        </div>
                         <div className="flex gap-2">
                             {searchResults !== null && (
-                                <Button variant="outline" size="sm" onClick={clearSearch}>
+                                <Button variant="outline" size="sm" onClick={clearSearch} className="shadow-md hover:shadow-lg transition-all">
                                     <X className="h-4 w-4 mr-2" />
                                     Clear Search
                                 </Button>
                             )}
-                            <Button onClick={fetchData} disabled={loading} size="sm">
+                            <Button onClick={fetchData} disabled={loading} size="sm" className="shadow-md hover:shadow-lg transition-all">
                                 <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
                                 Refresh
                             </Button>
@@ -267,34 +285,34 @@ const EmailsPage = () => {
                     </div>
 
                     {/* Search & Filters Card */}
-                    <Card className="border-blue-100">
+                    <Card className="border-0 shadow-lg bg-white/90 backdrop-blur">
                         <CardContent className="pt-6">
                             <form onSubmit={handleSearch} className="space-y-4">
                                 <div className="flex gap-3">
                                     <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                                         <Input
                                             placeholder="Search by subject, body, or category..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="pl-9 h-10"
+                                            className="pl-10 h-11 border-gray-200 focus:ring-2 focus:ring-purple-500 transition-all"
                                         />
                                     </div>
                                     <Button
                                         type="button"
-                                        variant={showFilters ? "secondary" : "outline"}
+                                        variant={showFilters ? "default" : "outline"}
                                         onClick={() => setShowFilters(!showFilters)}
-                                        className="h-10"
+                                        className="h-11 shadow-md hover:shadow-lg transition-all"
                                     >
                                         <Filter className="h-4 w-4 mr-2" />
                                         Filters
                                         {(sender || dateRange.from || dateRange.to || minConfidence[0] > 0) && (
-                                            <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">
+                                            <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white animate-pulse">
                                                 {[sender, dateRange.from, dateRange.to, minConfidence[0] > 0].filter(Boolean).length}
                                             </span>
                                         )}
                                     </Button>
-                                    <Button type="submit" disabled={isSearching} className="h-10">
+                                    <Button type="submit" disabled={isSearching} className="h-11 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all">
                                         {isSearching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         Search
                                     </Button>
@@ -470,71 +488,77 @@ const EmailsPage = () => {
                                 </div>
                             ) : (
                                 (searchResults !== null ? searchResults : filteredEmails).map(email => (
-                                <Card
-                                    key={email.id}
-                                    className="hover:shadow-md transition-all cursor-pointer"
-                                    onClick={() => {
-                                        setSelectedEmail(email)
-                                        setDetailModalOpen(true)
-                                    }}
-                                >
-                                    <CardContent className="p-4">
-                                        <h3 className="font-semibold text-sm line-clamp-2 mb-2">
-                                            {email.subject || email.email_subject || '(No Subject)'}
-                                        </h3>
-                                        <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-                                            {email.body || email.email_body || 'No body content'}
-                                        </p>
-                                        <div className="flex flex-wrap gap-2 mb-3">
-                                            {email.category && (
-                                                <span className={cn("text-xs px-2 py-1 rounded font-bold", getCategoryColor(email.category))}>
-                                                    {email.category}
-                                                </span>
-                                            )}
-                                            {email.confidence && (
-                                                <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
-                                                    {(email.confidence > 1 ? email.confidence : email.confidence * 100).toFixed(0)}%
-                                                </span>
-                                            )}
+                                    <Card
+                                        key={email.id}
+                                        className="group hover:shadow-xl hover:scale-[1.02] transition-all duration-200 cursor-pointer border-l-4 bg-white/80 backdrop-blur"
+                                        style={{ borderLeftColor: email.category ? getCategoryColor(email.category).split(' ')[0].replace('bg-', '#') : '#gray' }}
+                                        onClick={() => {
+                                            setSelectedEmail(email)
+                                            setDetailModalOpen(true)
+                                        }}
+                                    >
+                                        <CardContent className="p-5">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <h3 className="font-semibold text-base line-clamp-2 flex-1 group-hover:text-blue-600 transition-colors">
+                                                    {email.subject || email.email_subject || '(No Subject)'}
+                                                </h3>
+                                                {email.confidence && (
+                                                    <span className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold ml-2 shadow-sm">
+                                                        {(email.confidence > 1 ? email.confidence : email.confidence * 100).toFixed(0)}%
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
+                                                {email.body || email.email_body || 'No body content'}
+                                            </p>
+                                            <div className="flex flex-wrap gap-2 mb-4">
+                                                {email.category && (
+                                                    <span className={cn("text-xs px-3 py-1.5 rounded-full font-bold shadow-sm", getCategoryColor(email.category))}>
+                                                        {email.category.replace(/_/g, ' ').toUpperCase()}
+                                                    </span>
+                                                )}
 
-                                            {/* Entity Badges */}
-                                            {email.entities?.dates?.map((date, i) => (
-                                                <span key={`date-${i}`} className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
-                                                    📅 {date}
-                                                </span>
-                                            ))}
-                                            {email.entities?.amounts?.map((amount, i) => (
-                                                <span key={`amt-${i}`} className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
-                                                    💰 {amount}
-                                                </span>
-                                            ))}
-                                        </div>
+                                                {/* Entity Badges */}
+                                                {email.entities?.dates?.slice(0, 2).map((date, i) => (
+                                                    <span key={`date-${i}`} className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                                        📅 {typeof date === 'object' ? (date.original || date.parsed) : date}
+                                                    </span>
+                                                ))}
+                                                {email.entities?.amounts?.slice(0, 2).map((amount, i) => (
+                                                    <span key={`amt-${i}`} className="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">
+                                                        💰 {typeof amount === 'object' ? (amount.original || amount.value) : amount}
+                                                    </span>
+                                                ))}
+                                            </div>
 
-                                        <p className="text-xs text-muted-foreground mb-3 line-clamp-1">
-                                            From: {email.sender || email.email_sender || 'Unknown'}
-                                        </p>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-xs text-muted-foreground line-clamp-1 flex items-center gap-1.5">
+                                                    <Mail className="h-3 w-3" />
+                                                    {email.sender || email.email_sender || 'Unknown'}
+                                                </p>
 
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="w-full"
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleGenerateReply(email)
-                                            }}
-                                            disabled={generatingReply === email.id}
-                                        >
-                                            {generatingReply === email.id ? (
-                                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                            ) : (
-                                                <Sparkles className="mr-2 h-3 w-3 text-yellow-500" />
-                                            )}
-                                            Generate Reply
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        )}
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 text-xs"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleGenerateReply(email)
+                                                    }}
+                                                    disabled={generatingReply === email.id}
+                                                >
+                                                    {generatingReply === email.id ? (
+                                                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                    ) : (
+                                                        <Sparkles className="mr-1 h-3 w-3 text-yellow-500" />
+                                                    )}
+                                                    Reply
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>
@@ -562,18 +586,18 @@ const EmailsPage = () => {
                                     </span>
                                     <span className={cn("text-xs px-2 py-1 rounded font-medium",
                                         replyDraft.analysis.priority === 'critical' ? "bg-red-100 text-red-800" :
-                                        replyDraft.analysis.priority === 'high' ? "bg-orange-100 text-orange-800" :
-                                        "bg-gray-100 text-gray-600"
+                                            replyDraft.analysis.priority === 'high' ? "bg-orange-100 text-orange-800" :
+                                                "bg-gray-100 text-gray-600"
                                     )}>
                                         ⚡ {replyDraft.analysis.priority}
                                     </span>
                                     <span className={cn("text-xs px-2 py-1 rounded font-medium",
                                         replyDraft.analysis.sentiment === 'positive' ? "bg-green-100 text-green-800" :
-                                        replyDraft.analysis.sentiment === 'negative' ? "bg-red-100 text-red-800" :
-                                        "bg-gray-100 text-gray-600"
+                                            replyDraft.analysis.sentiment === 'negative' ? "bg-red-100 text-red-800" :
+                                                "bg-gray-100 text-gray-600"
                                     )}>
                                         {replyDraft.analysis.sentiment === 'positive' ? '😊' :
-                                         replyDraft.analysis.sentiment === 'negative' ? '😠' : '😐'} {replyDraft.analysis.sentiment}
+                                            replyDraft.analysis.sentiment === 'negative' ? '😠' : '😐'} {replyDraft.analysis.sentiment}
                                     </span>
                                     {replyDraft.analysis.entities_found > 0 && (
                                         <span className="text-xs px-2 py-1 rounded bg-purple-100 text-purple-800 font-medium">

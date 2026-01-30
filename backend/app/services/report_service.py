@@ -89,6 +89,11 @@ class ReportService:
         finally:
             conn.close()
     
+    def generate_report(self, report_type: str, filters: Dict, format: str = 'text') -> str:
+        """Generate report - wrapper method for compatibility"""
+        result = self.generate_classification_report(user_id=0, filters=filters, format=format)
+        return result.get('content', '')
+    
     def generate_classification_report(self, user_id: int, filters: Dict, 
                                       format: str = 'text') -> Dict:
         """Generate a classification report"""

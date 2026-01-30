@@ -172,7 +172,12 @@ class GmailServer(EmailServerInterface):
                     import concurrent.futures
                     
                     def run_oauth_flow():
-                        """Run the OAuth flow in a separate thread"""
+                        """Run the OAuth flow in a separate thread.
+                        If running in headless mode (GMAIL_HEADLESS env var), use the console flow."""
+                        headless = os.getenv("GMAIL_HEADLESS", "false").lower() == "true"
+                        if headless:
+                            logger.info("GMAIL_HEADLESS enabled: using console OAuth flow. Follow instructions in the server logs/terminal to complete auth.")
+                            return flow.run_console()
                         try:
                             return flow.run_local_server(port=0, open_browser=True)
                         except OSError as e:

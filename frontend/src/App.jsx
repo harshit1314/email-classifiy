@@ -20,7 +20,21 @@ const ProtectedRoute = () => {
     const { isAuthenticated, loading } = useAuth()
 
     if (loading) {
-        return <div className="flex h-screen items-center justify-center">Loading...</div>
+        return (
+            <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+                <div className="text-center space-y-4">
+                    <div className="relative inline-block">
+                        <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full animate-pulse"></div>
+                        </div>
+                    </div>
+                    <p className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        Loading EmailIQ...
+                    </p>
+                </div>
+            </div>
+        )
     }
 
     return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />

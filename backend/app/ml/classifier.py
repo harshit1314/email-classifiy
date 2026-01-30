@@ -7,6 +7,8 @@ from sklearn.pipeline import Pipeline
 import re
 import logging
 from typing import Dict
+from functools import lru_cache
+import threading
 
 logger = logging.getLogger(__name__)
 
@@ -34,29 +36,43 @@ except ImportError:
     LLM_AVAILABLE = False
     logger.warning("LLM classifier not available. Install openai: pip install openai")
 
+# Try to import Improved classifier (high accuracy ensemble)
+try:
+    from app.ml.improved_classifier import ImprovedEmailClassifier
+    IMPROVED_AVAILABLE = True
+except ImportError:
+    IMPROVED_AVAILABLE = False
+    logger.warning("Improved classifier dependencies not available. Install: pip install scikit-learn>=1.0")
+
 class EmailClassifier:
+    """Email classifier with lazy loading for better performance"""
+    _init_lock = threading.Lock()  # Thread-safe initialization
+    
     def __init__(self, use_bert: bool = True, use_llm: bool = False, llm_api_key: str = None, 
-                 enterprise_mode: bool = True):
+                 enterprise_mode: bool = True, use_improved: bool = True):
         """
-        Initialize Email Classifier
+        Initialize Email Classifier with lazy loading (models loaded on first use)
         
         Args:
             use_bert: If True, use BERT classifier. If False, use TF-IDF + Naive Bayes.
             use_llm: DEPRECATED - Always False.
             llm_api_key: DEPRECATED - Not used.
             enterprise_mode: If True, use Enterprise classifier for department routing (Sales, HR, Finance, etc.)
+            use_improved: If True, use Improved ensemble classifier for higher accuracy (RECOMMENDED)
         """
         self.use_llm = False
-        self.use_bert = use_bert and BERT_AVAILABLE
+        self.use_improved = use_improved and IMPROVED_AVAILABLE
+        self.use_bert = use_bert and BERT_AVAILABLE and not self.use_improved  # Improved takes priority
         self.enterprise_mode = enterprise_mode and ENTERPRISE_AVAILABLE
         self.model = None
         self.bert_classifier = None
         self.enterprise_classifier = None
         self.llm_classifier = None
+        self.improved_classifier = None
         self.model_path = os.path.join(os.path.dirname(__file__), "email_classifier_model.joblib")
         self._fallback_initialized = False
 
-        logger.info(f"Initializing classifier (enterprise_mode={self.enterprise_mode})")
+        logger.info(f"Initializing classifier (enterprise_mode={self.enterprise_mode}, improved={self.use_improved})")
         self._initialize_fallback()
     
     def _initialize_fallback(self):
@@ -73,8 +89,20 @@ class EmailClassifier:
                 self._fallback_initialized = True
                 return
             except Exception as e:
-                logger.warning(f"Enterprise classifier failed: {e}. Falling back to BERT.")
+                logger.warning(f"Enterprise classifier failed: {e}. Falling back to improved classifier.")
                 self.enterprise_mode = False
+        
+        # Try Improved classifier (ensemble with high accuracy)
+        if self.use_improved:
+            logger.info("Initializing Improved Ensemble classifier (RECOMMENDED)")
+            try:
+                self.improved_classifier = ImprovedEmailClassifier()
+                logger.info("✅ Improved classifier initialized with ensemble methods")
+                self._fallback_initialized = True
+                return
+            except Exception as e:
+                logger.warning(f"Improved classifier failed: {e}. Falling back to BERT.")
+                self.use_improved = False
             
         if self.use_bert:
             logger.info("Initializing DistilBERT classifier")
@@ -281,7 +309,26 @@ class EmailClassifier:
                     return result
                     
             except Exception as e:
-                logger.warning(f"Enterprise classifier failed: {e}. Falling back to BERT.")
+                logger.warning(f"Enterprise classifier failed: {e}. Falling back to improved classifier.")
+        
+        # Use Improved ensemble classifier (high accuracy)
+        if self.use_improved and self.improved_classifier:
+            try:
+                logger.debug("Using Improved ensemble classifier...")
+                result = self.improved_classifier.classify(subject, body)
+                logger.debug(f"Improved classifier result: {result.get('category')} (confidence: {result.get('confidence', 0):.0%})")
+                
+                if result.get('confidence', 0) > 0.3:  # Reasonable confidence threshold
+                    # Map to enterprise categories if needed
+                    if self.enterprise_mode:
+                        result = self._map_to_enterprise_categories(result)
+                    # Ensure result has all expected keys
+                    result.setdefault("urgency", "Medium")
+                    result.setdefault("sentiment", "Neutral")
+                    result.setdefault("keywords", [])
+                    return result
+            except Exception as e:
+                logger.warning(f"Improved classifier failed: {e}. Falling back to BERT.")
         
         # Fallback to BERT/DistilBERT
         if self.use_bert and self.bert_classifier:

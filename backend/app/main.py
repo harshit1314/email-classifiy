@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException, Body, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 from datetime import datetime
 from contextlib import asynccontextmanager
@@ -102,7 +102,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"MongoDB initialization failed: {e}")
 
-    global db_logger, action_service, processing_service, ingestion_service, email_poller
+    global db_logger, action_service, processing_service, ingestion_service, email_poller, email_processor
     global auth_service, export_service, analytics_service, custom_categories_service
     global notification_service, retraining_service, auto_reply_service, filter_service
     global scheduler_service, calendar_service, report_service, task_service, webhook_service
@@ -120,6 +120,10 @@ async def lifespan(app: FastAPI):
     )
     ingestion_service = IngestionService(processing_service=processing_service)
     email_poller = EmailPoller(ingestion_service=ingestion_service)
+    
+    # Initialize email processor for MongoDB-first architecture
+    from app.services.email_processor import EmailProcessor
+    email_processor = EmailProcessor(processing_service=processing_service, db_logger=db_logger)
 
     # Initialize new services
     auth_service = AuthService()
@@ -156,6 +160,11 @@ async def lifespan(app: FastAPI):
         auth_service.init_database()
         
         await email_poller.start_gmail_polling({})
+        
+        # Start email processor to process emails from MongoDB
+        logger.info("Starting email processor for MongoDB-first architecture...")
+        await email_processor.start_processing(interval=5)
+        logger.info("✅ Email processor started")
     except Exception as e:
         logger.warning(f"Auto-connect to Gmail failed (this is normal if not configured yet): {e}")
     
@@ -253,6 +262,18 @@ class OutlookMessage(BaseModel):
     sender: Dict
     toRecipients: List[Dict]
     receivedDateTime: Optional[str] = None
+
+class ExtractMeetingRequest(BaseModel):
+    """Request model for extracting meetings from email"""
+    email_text: Optional[str] = None
+    email_body: Optional[str] = None
+    email_subject: Optional[str] = ""
+
+class ReportGenerateRequest(BaseModel):
+    """Request model for generating reports"""
+    report_type: str = "classification"
+    filters: Dict = Field(default_factory=dict)
+    format: str = "text"
 
 # ==================== API Endpoints ====================
 
@@ -534,11 +555,37 @@ async def get_statistics():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/dashboard/classifications")
-async def get_classifications(limit: int = 100, category: Optional[str] = None, department: Optional[str] = None):
-    """Get recent classifications for dashboard"""
+async def get_classifications(
+    limit: int = 50,  # Reduced default from 100 to 50 for better performance
+    category: Optional[str] = None, 
+    department: Optional[str] = None,
+    offset: int = 0  # Add pagination offset
+):
+    """
+    Get recent classifications for dashboard with pagination
+    
+    Performance optimizations:
+    - Default limit reduced to 50 (was 100)
+    - Max limit capped at 500 to prevent memory issues (increased from 100)
+    - Added offset parameter for pagination
+    """
     try:
-        classifications = db_logger.get_classifications(limit=limit, category=category, department=department)
-        return {"classifications": classifications, "count": len(classifications)}
+        # Cap limit at 500 for performance (increased from 100 to show all emails)
+        limit = min(limit, 500)
+        
+        classifications = db_logger.get_classifications(
+            limit=limit, 
+            category=category, 
+            department=department,
+            offset=offset
+        )
+        return {
+            "classifications": classifications, 
+            "count": len(classifications),
+            "limit": limit,
+            "offset": offset,
+            "has_more": len(classifications) == limit  # Indicator if more data exists
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -621,12 +668,24 @@ async def start_gmail_polling(request: Dict = Body(...)):
             logger.info(f"Received Gmail connection request: client_id={bool(creds_dict.get('client_id'))}, interval={interval}, batch_size={batch_size}")
             result = await email_poller.start_gmail_polling(creds_dict, interval, batch_size)
             
-            if result:
+            if result and isinstance(result, dict):
                 logger.info("Gmail polling started successfully")
                 return {
                     "status": "started",
                     "provider": "gmail",
                     "interval": interval,
+                    "backfilled": result.get("backfilled", 0),
+                    "message": "Gmail polling started. Check your browser for OAuth authorization."
+                }
+
+
+            elif result:
+                logger.info("Gmail polling started (no detailed result)")
+                return {
+                    "status": "started",
+                    "provider": "gmail",
+                    "interval": interval,
+                    "backfilled": 0,
                     "message": "Gmail polling started. Check your browser for OAuth authorization."
                 }
             else:
@@ -666,6 +725,21 @@ async def start_gmail_polling(request: Dict = Body(...)):
                     )
                 )
             raise HTTPException(status_code=500, detail=f"Failed to connect to Gmail: {error_detail}")
+
+@app.post("/api/email/reprocess-pending")
+async def reprocess_pending(request: Dict = Body(...)):
+    """Trigger reprocessing of pending/ingested emails.
+    Request body (optional): { "source": "mongo|sqlite|both", "limit": 100 }
+    """
+    try:
+        source = request.get('source', 'mongo')
+        limit = int(request.get('limit', 100))
+        # Call processing service method
+        result = await processing_service.reprocess_pending_emails(source=source, limit=limit)
+        return {"status": "ok", "result": result}
+    except Exception as e:
+        logger.error(f"Error reprocessing pending emails: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/email/start-outlook")
 async def start_outlook_polling(request: Dict = Body(...)):
@@ -1917,27 +1991,28 @@ async def cancel_scheduled_email(
 
 # ==================== Calendar Integration Endpoints ====================
 
-@app.post("/api/calendar/extract-meeting")
-async def extract_meeting_from_email(
-    email_subject: str,
-    email_body: str,
-    email_id: Optional[int] = None,
-    current_user: User = Depends(get_current_user)
-):
-    """Extract meeting information from an email"""
-    try:
-        meeting_info = calendar_service.extract_meeting_info(email_subject, email_body)
-        if meeting_info:
-            event = calendar_service.create_calendar_event(
-                current_user.id,
-                meeting_info,
-                email_id
-            )
-            return {"meeting_found": True, "event": event}
-        else:
-            return {"meeting_found": False, "message": "No meeting information found in email"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# DUPLICATE ROUTE - COMMENTED OUT
+# @app.post("/api/calendar/extract-meeting")
+# async def extract_meeting_from_email(
+#     email_subject: str,
+#     email_body: str,
+#     email_id: Optional[int] = None,
+#     current_user: User = Depends(get_current_user)
+# ):
+#     """Extract meeting information from an email"""
+#     try:
+#         meeting_info = calendar_service.extract_meeting_info(email_subject, email_body)
+#         if meeting_info:
+#             event = calendar_service.create_calendar_event(
+#                 current_user.id,
+#                 meeting_info,
+#                 email_id
+#             )
+#             return {"meeting_found": True, "event": event}
+#         else:
+#             return {"meeting_found": False, "message": "No meeting information found in email"}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/calendar/events")
 async def get_calendar_events(
@@ -2089,26 +2164,27 @@ async def generate_smart_reply(
 
 # ==================== Custom Reports Endpoints ====================
 
-@app.post("/api/reports/generate")
-async def generate_report(
-    report_type: str,
-    filters: Dict,
-    format: str = 'text',
-    current_user: User = Depends(get_current_user)
-):
-    """Generate a custom report"""
-    try:
-        if report_type == 'classification':
-            result = report_service.generate_classification_report(
-                current_user.id,
-                filters,
-                format
-            )
-            return result
-        else:
-            raise HTTPException(status_code=400, detail=f"Unknown report type: {report_type}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# DUPLICATE ROUTE - COMMENTED OUT - Use the one at line 2341
+# @app.post("/api/reports/generate")
+# async def generate_report(
+#     report_type: str,
+#     filters: Dict,
+#     format: str = 'text',
+#     current_user: User = Depends(get_current_user)
+# ):
+#     """Generate a custom report"""
+#     try:
+#         if report_type == 'classification':
+#             result = report_service.generate_classification_report(
+#                 current_user.id,
+#                 filters,
+#                 format
+#             )
+#             return result
+#         else:
+#             raise HTTPException(status_code=400, detail=f"Unknown report type: {report_type}")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/reports/templates")
 async def create_report_template(
@@ -2225,13 +2301,18 @@ async def get_calendar_events(
 
 @app.post("/api/calendar/extract-meeting")
 async def extract_meeting_from_email(
-    request: Dict = Body(...),
+    request: ExtractMeetingRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Extract meeting details from email"""
     try:
-        email_body = request.get("email_body", "")
-        email_subject = request.get("email_subject", "")
+        # Support both email_text and email_body parameters
+        email_text = request.email_text or ""
+        email_body = request.email_body or email_text
+        email_subject = request.email_subject or ""
+        
+        if not email_body and not email_text:
+            return {"success": False, "meetings": [], "message": "No email content provided"}
         
         calendar_service = CalendarService()
         result = calendar_service.extract_and_schedule(email_subject, email_body)
@@ -2298,21 +2379,21 @@ async def create_auto_reply_template(
 
 @app.post("/api/reports/generate")
 async def generate_report(
-    request: Dict = Body(...),
+    request: ReportGenerateRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Generate report"""
     try:
         report_service = ReportService()
         content = report_service.generate_report(
-            request.get("report_type", "classification"),
-            request.get("filters", {}),
-            request.get("format", "text")
+            request.report_type,
+            request.filters,
+            request.format
         )
         return {
             "content": content,
             "record_count": len(content.split('\n')) - 1, # Rough estimate
-            "format": request.get("format", "text")
+            "format": request.format
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

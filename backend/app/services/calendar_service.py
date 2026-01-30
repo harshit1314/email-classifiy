@@ -221,6 +221,47 @@ class CalendarService:
         conn.close()
         return events
     
+    def extract_and_schedule(self, email_subject: str, email_body: str) -> Dict:
+        """Extract meeting information and return formatted result"""
+        try:
+            meeting_info = self.extract_meeting_info(email_subject, email_body)
+            
+            if meeting_info:
+                # Format meeting info for response
+                meetings = [{
+                    "title": meeting_info.get("title", "Meeting"),
+                    "summary": email_subject,
+                    "description": meeting_info.get("description", ""),
+                    "location": meeting_info.get("location", ""),
+                    "start": meeting_info.get("start_time") or datetime.now().isoformat(),
+                    "date": meeting_info.get("start_time") or datetime.now().isoformat(),
+                    "attendees": meeting_info.get("attendees", []),
+                    "organizer": meeting_info.get("organizer", ""),
+                    "has_date": meeting_info.get("has_date", False),
+                    "has_time": meeting_info.get("has_time", False)
+                }]
+                
+                return {
+                    "success": True,
+                    "meetings": meetings,
+                    "count": len(meetings)
+                }
+            else:
+                return {
+                    "success": False,
+                    "meetings": [],
+                    "count": 0,
+                    "message": "No meeting information found in email"
+                }
+        except Exception as e:
+            logger.error(f"Error extracting meeting: {str(e)}")
+            return {
+                "success": False,
+                "meetings": [],
+                "count": 0,
+                "message": str(e)
+            }
+    
     def sync_to_google_calendar(self, event_id: int, user_id: int, access_token: str) -> Dict:
         """Sync event to Google Calendar (placeholder - requires Google Calendar API)"""
         # TODO: Implement Google Calendar API integration
