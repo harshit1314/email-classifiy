@@ -41,6 +41,7 @@ This AI Email Classifier is an enterprise-grade solution designed to automate em
 - **Auto-Reply System**: Configurable automated responses
 - **Retraining Capabilities**: Continuous model improvement with feedback loops
 - **MongoDB Integration**: Scalable data storage with retention policies
+- **Meeting Extraction**: AI-powered meeting detection and calendar integration from emails
 
 ## ✨ Features
 
@@ -55,6 +56,7 @@ This AI Email Classifier is an enterprise-grade solution designed to automate em
 - **Model Retraining**: Automated retraining with user feedback
 - **Sentiment Analysis**: Positive, negative, neutral detection
 - **Entity Recognition**: Dates, amounts, names, locations extraction
+- **Meeting Detection**: Automatic extraction of meeting details from emails
 
 ### 📧 Email Management
 - **Multi-Provider Support**: Gmail and Outlook integration
@@ -65,6 +67,15 @@ This AI Email Classifier is an enterprise-grade solution designed to automate em
 - **Email Filtering**: Custom rule-based filters
 - **Auto-Reply**: Configurable automated responses
 - **Batch Processing**: Handle multiple emails efficiently
+
+### 📅 Calendar Integration
+- **AI Meeting Extraction**: Automatically detect meetings from email content
+- **Smart Date/Time Parsing**: Understands multiple date and time formats
+- **Location Detection**: Extract physical locations and virtual meeting links
+- **Attendee Extraction**: Identify meeting participants from emails
+- **Auto-Scheduling**: Create calendar events from classified emails
+- **Confidence Scoring**: High/medium confidence levels for extracted meetings
+- **Virtual Meeting Support**: Zoom, Teams, Google Meet link detection
 
 ### 📊 Analytics & Monitoring
 - **Real-Time Dashboard**: Live email statistics and metrics
@@ -483,6 +494,10 @@ LOG_LEVEL=INFO
 AUTO_CLASSIFY_ON_INGEST=true
 CLASSIFY_ASYNC=false
 
+# Admin Account (automatically created on first run)
+ADMIN_EMAIL=admin@emailclassifier.com
+ADMIN_PASSWORD=admin123
+
 # Gmail API (Optional)
 GMAIL_CLIENT_ID=your_client_id.apps.googleusercontent.com
 GMAIL_CLIENT_SECRET=your_client_secret
@@ -513,6 +528,49 @@ Edit [frontend/src/config.js](frontend/src/config.js) or create environment vari
 // vite environment variables (.env.local)
 VITE_API_URL=http://localhost:8000
 ```
+
+## 🔐 Default Admin Account
+
+The application automatically creates a default admin account on first startup, so you don't need to create a new account every time you run the application on a different OS or machine.
+
+### Default Credentials
+
+```
+Email: admin@emailclassifier.com
+Password: admin123
+```
+
+⚠️ **Important**: Change these credentials after your first login for security!
+
+### Customizing Admin Account
+
+You can customize the default admin credentials using environment variables in your `.env` file:
+
+```bash
+# Admin Account Configuration
+ADMIN_EMAIL=your_email@example.com
+ADMIN_PASSWORD=your_secure_password
+```
+
+### How It Works
+
+1. On application startup, the system checks if an admin account exists
+2. If no admin account is found, it creates one automatically using the credentials from environment variables or defaults
+3. The admin account persists in the database across all sessions and OS restarts
+4. You can login immediately without manual account creation
+
+📖 For more details, see [ADMIN_ACCOUNT_SETUP.md](documents/ADMIN_ACCOUNT_SETUP.md)
+
+### Creating Additional Users
+
+If you need additional user accounts:
+
+```bash
+cd backend
+python create_user.py
+```
+
+Follow the prompts to create a new user account.
 
 ## 📁 Project Structure
 

@@ -24,12 +24,12 @@ class EmailPoller:
         self.filter_service = FilterService()
         self.polling_active = False
         self.polling_task = None
-        self.poll_interval = 30  # seconds
+        self.poll_interval = 60  # seconds - increased from 30s for better performance
         self.batch_size = 200    # emails per poll (increased from 20 to 200)
         self.last_check_time = {}
         self.processed_emails = set()  # Track processed emails to avoid duplicates
         
-    async def start_gmail_polling(self, credentials: Dict, interval: int = 30, batch_size: int = 20):
+    async def start_gmail_polling(self, credentials: Dict, interval: int = 60, batch_size: int = 20):
         """Start polling Gmail for new emails"""
         if self.gmail_server.is_connected():
             logger.warning("Gmail polling already active")
@@ -122,7 +122,7 @@ class EmailPoller:
             logger.info("Polling already active")
             return {"started": True, "backfilled": backfilled}
     
-    async def start_outlook_polling(self, credentials: Dict, interval: int = 30, batch_size: int = 20):
+    async def start_outlook_polling(self, credentials: Dict, interval: int = 60, batch_size: int = 20):
         """Start polling Outlook for new emails"""
         if self.outlook_server.is_connected():
             logger.warning("Outlook polling already active")

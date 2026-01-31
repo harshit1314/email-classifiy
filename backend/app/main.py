@@ -155,6 +155,10 @@ async def lifespan(app: FastAPI):
         # Initialize Auth Service Tables ONCE
         auth_service.init_database()
         
+        # Create default admin account
+        logger.info("Setting up default admin account...")
+        auth_service.create_default_admin()
+        
         await email_poller.start_gmail_polling({})
         logger.info("✅ Email services initialized")
     except Exception as e:
@@ -260,6 +264,12 @@ class ExtractMeetingRequest(BaseModel):
     email_text: Optional[str] = None
     email_body: Optional[str] = None
     email_subject: Optional[str] = ""
+
+class ExtractFromClassifiedRequest(BaseModel):
+    """Request model for extracting meetings from classified emails"""
+    limit: int = 50
+    category: Optional[str] = None
+    days_back: Optional[int] = 30
 
 class ReportGenerateRequest(BaseModel):
     """Request model for generating reports"""
@@ -548,7 +558,7 @@ async def get_statistics():
 
 @app.get("/api/dashboard/classifications")
 async def get_classifications(
-    limit: int = 50,  # Reduced default from 100 to 50 for better performance
+    limit: int = 20,  # Reduced default for better performance
     category: Optional[str] = None, 
     department: Optional[str] = None,
     offset: int = 0  # Add pagination offset
@@ -557,13 +567,13 @@ async def get_classifications(
     Get recent classifications for dashboard with pagination
     
     Performance optimizations:
-    - Default limit reduced to 50 (was 100)
-    - Max limit capped at 500 to prevent memory issues (increased from 100)
+    - Default limit reduced to 20 for faster loading
+    - Max limit capped at 200 to prevent memory issues
     - Added offset parameter for pagination
     """
     try:
-        # Cap limit at 500 for performance (increased from 100 to show all emails)
-        limit = min(limit, 500)
+        # Cap limit at 200 for performance
+        limit = min(limit, 200)
         
         classifications = db_logger.get_classifications(
             limit=limit, 
@@ -2307,9 +2317,141 @@ async def extract_meeting_from_email(
             return {"success": False, "meetings": [], "message": "No email content provided"}
         
         calendar_service = CalendarService()
-        result = calendar_service.extract_and_schedule(email_subject, email_body)
+        result = calendar_service.extract_and_schedule(email_subject, email_body, user_id=current_user.id)
         return result
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/calendar/extract-from-classified")
+async def extract_meetings_from_classified_emails(
+    request: ExtractFromClassifiedRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Automatically extract meetings from recently classified emails"""
+    try:
+        from datetime import timedelta
+        db_logger = DatabaseLogger()
+        calendar_service = CalendarService()
+        
+        # Calculate start date for time window
+        start_date = None
+        if request.days_back:
+            start_date = (datetime.now() - timedelta(days=request.days_back)).isoformat()
+        
+        # Get recent emails (prioritize important category)
+        recent_emails = db_logger.get_classifications(
+            limit=request.limit,
+            category=request.category,
+            user_id=current_user.id,
+            start_date=start_date
+        )
+        
+        extracted_meetings = []
+        skipped_duplicates = 0
+        emails_processed = 0
+        emails_with_meetings = []
+        
+        logger.info(f"Scanning {len(recent_emails)} classified emails for meetings")
+        
+        for email in recent_emails:
+            emails_processed += 1
+            email_id = email.get("id")
+            
+            # Check if we already extracted a meeting from this email
+            if calendar_service.meeting_exists_for_email(email_id, current_user.id):
+                logger.debug(f"Skipping email {email_id} - meeting already extracted")
+                skipped_duplicates += 1
+                continue
+            
+            # Database columns are email_subject and email_body
+            subject = email.get("email_subject", "")
+            body = email.get("email_body", "")
+            
+            if not subject and not body:
+                logger.debug(f"Skipping email {email_id} - no subject or body")
+                continue
+            
+            logger.debug(f"Checking email: {subject[:50]}...")
+            
+            # Extract meeting from this email
+            meeting_result = calendar_service.extract_and_schedule(subject, body, user_id=current_user.id, email_id=email_id)
+            
+            if meeting_result.get("success") and meeting_result.get("meetings"):
+                for meeting in meeting_result["meetings"]:
+                    meeting["email_id"] = email_id
+                    meeting["email_subject"] = subject
+                    extracted_meetings.append(meeting)
+                emails_with_meetings.append(subject[:50])
+        
+        logger.info(f"Extraction complete: {len(extracted_meetings)} meetings from {len(emails_with_meetings)} emails, {skipped_duplicates} duplicates skipped")
+        
+        return {
+            "success": True,
+            "meetings": extracted_meetings,
+            "total_extracted": len(extracted_meetings),
+            "emails_processed": emails_processed,
+            "skipped_duplicates": skipped_duplicates,
+            "emails_with_meetings": emails_with_meetings[:10]  # First 10 for debugging
+        }
+    except Exception as e:
+        import traceback
+        logger.error(f"Error extracting meetings from emails: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to extract meetings: {str(e)}")
+
+@app.delete("/api/calendar/events/{event_id}")
+async def delete_calendar_event(
+    event_id: int,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a calendar event"""
+    try:
+        calendar_service = CalendarService()
+        result = calendar_service.delete_calendar_event(event_id, current_user.id)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=404, detail=result.get("message", "Event not found"))
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting calendar event: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/calendar/debug-emails")
+async def debug_recent_emails(
+    limit: int = 10,
+    current_user: User = Depends(get_current_user)
+):
+    """Debug endpoint to see recent emails and their content"""
+    try:
+        db_logger = DatabaseLogger()
+        recent_emails = db_logger.get_classifications(
+            limit=limit,
+            user_id=current_user.id
+        )
+        
+        # Return simplified version for debugging
+        debug_emails = []
+        for email in recent_emails:
+            debug_emails.append({
+                "id": email.get("id"),
+                "subject": email.get("email_subject", "")[:100],
+                "body_preview": email.get("email_body", "")[:200],
+                "category": email.get("category"),
+                "has_body": bool(email.get("email_body")),
+                "timestamp": email.get("timestamp")
+            })
+        
+        return {
+            "total_emails": len(debug_emails),
+            "emails": debug_emails
+        }
+    except Exception as e:
+        logger.error(f"Error fetching debug emails: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # ==================== Settings/Automation Endpoints ====================

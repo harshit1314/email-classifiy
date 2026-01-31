@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
-import { RefreshCw, Search, Filter, Loader2, Sparkles, Copy, Check, X, Mail } from 'lucide-react'
+import { RefreshCw, Search, Filter, Loader2, Sparkles, Copy, Check, X, Mail, Edit3 } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { format } from 'date-fns'
@@ -23,6 +23,13 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 // Lazy load EmailDetailModal
 const EmailDetailModal = lazy(() => import('@/components/EmailDetailModal'))
@@ -65,6 +72,14 @@ const EmailsPage = () => {
     const [generatingReply, setGeneratingReply] = useState(null)
     const [copied, setCopied] = useState(false)
     const [isSearching, setIsSearching] = useState(false)
+    const [correctingCategory, setCorrectingCategory] = useState(null)
+
+    // Available categories for correction
+    const availableCategories = [
+        'important', 'urgent', 'general', 'spam', 'promotion',
+        'social', 'work', 'personal', 'finance', 'travel',
+        'hr', 'it', 'legal', 'marketing', 'sales'
+    ]
 
     const fetchData = async () => {
         setLoading(true)
@@ -198,6 +213,39 @@ const EmailsPage = () => {
         setDateRange({ from: undefined, to: undefined })
         setMinConfidence([0])
         setSearchResults(null)
+    }
+
+    const handleCategoryCorrection = async (emailId, newCategory) => {
+        setCorrectingCategory(emailId)
+        try {
+            const params = new URLSearchParams({
+                classification_id: emailId,
+                corrected_category: newCategory,
+                notes: 'User manual correction'
+            })
+
+            await axios.post(
+                `${API_URL}/api/feedback?${params.toString()}`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+
+            // Refresh data from server to ensure consistency
+            await fetchData()
+
+            toast({
+                title: "Category Updated",
+                description: `Successfully changed to ${newCategory}`,
+            })
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Update Failed",
+                description: formatErrorMessage(err.response?.data?.detail || err.message)
+            })
+        } finally {
+            setCorrectingCategory(null)
+        }
     }
 
     const handleEmailClick = (email) => {
@@ -513,9 +561,50 @@ const EmailsPage = () => {
                                             </p>
                                             <div className="flex flex-wrap gap-2 mb-4">
                                                 {email.category && (
-                                                    <span className={cn("text-xs px-3 py-1.5 rounded-full font-bold shadow-sm", getCategoryColor(email.category))}>
-                                                        {email.category.replace(/_/g, ' ').toUpperCase()}
-                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={cn("text-xs px-3 py-1.5 rounded-full font-bold shadow-sm", getCategoryColor(email.category))}>
+                                                            {email.category.replace(/_/g, ' ').toUpperCase()}
+                                                        </span>
+                                                        <Popover>
+                                                            <PopoverTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-6 w-6 p-0 hover:bg-blue-100"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    title="Change category"
+                                                                >
+                                                                    <Edit3 className="h-3 w-3" />
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-56" onClick={(e) => e.stopPropagation()}>
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-sm font-semibold">Change Category</Label>
+                                                                    <Select
+                                                                        onValueChange={(value) => handleCategoryCorrection(email.id, value)}
+                                                                        disabled={correctingCategory === email.id}
+                                                                    >
+                                                                        <SelectTrigger>
+                                                                            <SelectValue placeholder="Select category" />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {availableCategories.map(cat => (
+                                                                                <SelectItem key={cat} value={cat}>
+                                                                                    {cat.replace(/_/g, ' ').toUpperCase()}
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                    {correctingCategory === email.id && (
+                                                                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                                                            Updating...
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    </div>
                                                 )}
 
                                                 {/* Entity Badges */}

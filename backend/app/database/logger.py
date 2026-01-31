@@ -392,12 +392,12 @@ class DatabaseLogger:
         
         feedback_id = cursor.lastrowid
         
-        # Update the classification with correction
+        # Update the classification with correction - update both category and user_corrected_category
         cursor.execute('''
             UPDATE classifications 
-            SET user_corrected_category = ?, needs_review = 0
+            SET category = ?, user_corrected_category = ?, needs_review = 0
             WHERE id = ?
-        ''', (corrected_category, classification_id))
+        ''', (corrected_category, corrected_category, classification_id))
         
         conn.commit()
         conn.close()

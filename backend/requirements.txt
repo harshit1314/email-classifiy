@@ -27,3 +27,7 @@ motor>=3.3.0
 accelerate>=1.12.0
 # Kaggle dataset integration
 kagglehub>=0.2.0
+# PDF generation for exports
+fpdf2>=2.7.0
+# Enhanced date/time parsing for calendar
+python-dateutil>=2.8.2

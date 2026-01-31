@@ -61,6 +61,60 @@ class AuthService:
         conn.close()
         logger.info("Users table initialized")
     
+    def create_default_admin(self, admin_email: str = None, admin_password: str = None):
+        """Create a default admin account if it doesn't exist"""
+        # Use environment variables or defaults
+        default_email = admin_email or os.getenv("ADMIN_EMAIL", "admin@emailclassifier.com")
+        default_password = admin_password or os.getenv("ADMIN_PASSWORD", "admin123")
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            # Check if admin user already exists
+            cursor.execute('SELECT id FROM users WHERE email = ?', (default_email,))
+            existing_user = cursor.fetchone()
+            
+            if existing_user:
+                logger.info(f"Default admin account already exists: {default_email}")
+                return None
+            
+            # Create admin user
+            password_hash = self.hash_password(default_password)
+            
+            cursor.execute('''
+                INSERT INTO users (email, password_hash, full_name)
+                VALUES (?, ?, ?)
+            ''', (default_email, password_hash, "Admin User"))
+            
+            user_id = cursor.lastrowid
+            
+            # Create default settings for admin
+            cursor.execute('''
+                INSERT INTO user_settings (user_id)
+                VALUES (?)
+            ''', (user_id,))
+            
+            conn.commit()
+            
+            logger.info(f"✅ Default admin account created successfully!")
+            logger.info(f"   Email: {default_email}")
+            logger.info(f"   Password: {default_password}")
+            logger.info(f"   ⚠️  Please change the password after first login!")
+            
+            return {
+                "email": default_email,
+                "password": default_password,
+                "message": "Admin account created successfully"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error creating default admin: {str(e)}")
+            conn.rollback()
+            return None
+        finally:
+            conn.close()
+    
     def hash_password(self, password: str) -> str:
         """Hash a password using bcrypt"""
         return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')

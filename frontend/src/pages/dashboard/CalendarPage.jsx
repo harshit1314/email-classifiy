@@ -5,7 +5,8 @@ import { Calendar } from '@/components/ui/calendar'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2, CalendarDays, Plus, Sparkles, Clock, MapPin, Users, Mail } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Loader2, CalendarDays, Plus, Sparkles, Clock, MapPin, Users, Mail, Zap, CheckCircle2, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from "@/components/ui/use-toast"
 
@@ -29,19 +30,83 @@ const CalendarPage = () => {
     const [events, setEvents] = useState([])
     const [emailText, setEmailText] = useState('')
     const [extracting, setExtracting] = useState(false)
+    const [autoExtracting, setAutoExtracting] = useState(false)
+    const [selectedEvent, setSelectedEvent] = useState(null)
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        fetchEvents()
+        let mounted = true
+        const loadEvents = async () => {
+            if (mounted) await fetchEvents()
+        }
+        loadEvents()
+        return () => { mounted = false }
     }, [])
 
     const fetchEvents = async () => {
         try {
-            const response = await axios.get(`${API_URL}/api/calendar/events`, {
+            setLoading(true)
+            const response = await axios.get(`${API_URL}/api/calendar/events?limit=10`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
             setEvents(response.data.events || [])
         } catch (err) {
             console.error('Failed to fetch events:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleAutoExtract = async () => {
+        setAutoExtracting(true)
+        try {
+            const response = await axios.post(
+                `${API_URL}/api/calendar/extract-from-classified`,
+                { limit: 50, days_back: 7 },
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+            
+            const message = response.data.skipped_duplicates > 0 
+                ? `Found ${response.data.total_extracted} meeting(s) from ${response.data.emails_processed} emails (${response.data.skipped_duplicates} duplicates skipped)`
+                : `Found ${response.data.total_extracted} meeting(s) from ${response.data.emails_processed} emails`;
+            
+            toast({
+                title: "Auto-Extraction Complete",
+                description: message,
+            })
+            
+            if (response.data.meetings && response.data.meetings.length > 0) {
+                await fetchEvents()  // Refresh events
+            }
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Auto-Extraction Failed",
+                description: formatErrorMessage(err.response?.data?.detail || err.message)
+            })
+        } finally {
+            setAutoExtracting(false)
+        }
+    }
+
+    const handleDeleteEvent = async (eventId) => {
+        try {
+            await axios.delete(`${API_URL}/api/calendar/events/${eventId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            
+            toast({
+                title: "Event Deleted",
+                description: "Meeting removed from calendar",
+            })
+            
+            await fetchEvents()  // Refresh events
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Delete Failed",
+                description: formatErrorMessage(err.response?.data?.detail || err.message)
+            })
         }
     }
 
@@ -71,12 +136,13 @@ const CalendarPage = () => {
             if (response.data.meetings && response.data.meetings.length > 0) {
                 setEvents(prev => [...prev, ...response.data.meetings])
                 setEmailText('')
+                await fetchEvents()  // Refresh to get saved events
             }
         } catch (err) {
             toast({
                 variant: "destructive",
                 title: "Extraction Failed",
-                description: formatErrorMessage(err.response?.data?.detail || err.response?.data || err.message)
+                description: formatErrorMessage(err.response?.data?.detail || err.response?.data?.message || err.message)
             })
         } finally {
             setExtracting(false)
@@ -99,11 +165,30 @@ const CalendarPage = () => {
         <div className="flex-1 flex flex-col h-screen bg-transparent">
             <div className="flex-1 overflow-y-auto">
                 <div className="p-6 space-y-6">
-                    <div>
-                        <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
-                            Calendar
-                        </h2>
-                        <p className="text-sm text-muted-foreground">Manage your schedule and extract meetings from emails</p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+                                Calendar
+                            </h2>
+                            <p className="text-sm text-muted-foreground">Manage your schedule and extract meetings from emails</p>
+                        </div>
+                        <Button
+                            onClick={handleAutoExtract}
+                            disabled={autoExtracting}
+                            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                        >
+                            {autoExtracting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Scanning Emails...
+                                </>
+                            ) : (
+                                <>
+                                    <Zap className="mr-2 h-4 w-4" />
+                                    Auto-Extract from Emails
+                                </>
+                            )}
+                        </Button>
                     </div>
 
                     <div className="grid gap-6 md:grid-cols-3">
@@ -148,12 +233,38 @@ const CalendarPage = () => {
                                             {upcomingEvents.map((event, idx) => (
                                                 <div
                                                     key={idx}
-                                                    className="group rounded-lg bg-white/20 backdrop-blur border border-white/30 p-4 hover:bg-white/30 transition-all duration-200 hover:scale-105"
+                                                    className="group rounded-lg bg-white/20 backdrop-blur border border-white/30 p-4 hover:bg-white/30 transition-all duration-200"
                                                 >
-                                                    <h4 className="font-semibold text-white mb-2 flex items-center gap-2">
-                                                        <div className="w-2 h-2 rounded-full bg-yellow-300 animate-pulse"></div>
-                                                        {event.title || event.summary || 'Untitled Event'}
-                                                    </h4>
+                                                    <div className="flex items-start justify-between mb-2">
+                                                        <h4 
+                                                            className="font-semibold text-white flex items-center gap-2 cursor-pointer flex-1"
+                                                            onClick={() => setSelectedEvent(event)}
+                                                        >
+                                                            <div className="w-2 h-2 rounded-full bg-yellow-300 animate-pulse"></div>
+                                                            {event.event_title || event.title || event.summary || 'Untitled Event'}
+                                                        </h4>
+                                                        <div className="flex items-center gap-2">
+                                                            {(event.confidence === 'high' || event.has_date && event.has_time) && (
+                                                                <Badge className="bg-green-500/20 text-green-100 border-green-300">
+                                                                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                                                                    High
+                                                                </Badge>
+                                                            )}
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-6 w-6 p-0 text-red-200 hover:text-red-100 hover:bg-red-500/20"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    if (window.confirm('Delete this meeting?')) {
+                                                                        handleDeleteEvent(event.id)
+                                                                    }
+                                                                }}
+                                                            >
+                                                                ✕
+                                                            </Button>
+                                                        </div>
+                                                    </div>
                                                     <div className="space-y-1 text-sm text-blue-50">
                                                         <p className="flex items-center gap-2">
                                                             <Clock className="h-3 w-3" />
@@ -161,11 +272,11 @@ const CalendarPage = () => {
                                                         </p>
                                                         {event.location && (
                                                             <p className="flex items-center gap-2">
-                                                                <MapPin className="h-3 w-3" />
+                                                                {event.meeting_link ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
                                                                 {event.location}
                                                             </p>
                                                         )}
-                                                        {event.attendees && (
+                                                        {event.attendees && event.attendees.length > 0 && (
                                                             <p className="flex items-center gap-2">
                                                                 <Users className="h-3 w-3" />
                                                                 {event.attendees.length} attendee(s)
