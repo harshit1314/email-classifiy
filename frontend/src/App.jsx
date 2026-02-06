@@ -11,6 +11,7 @@ import EmailConnectPage from '@/pages/email/EmailConnectPage'
 import EmailClassifyPage from '@/pages/email/EmailClassifyPage'
 import CalendarPage from '@/pages/dashboard/CalendarPage'
 import SettingsPage from '@/pages/dashboard/SettingsPage'
+import DepartmentRoutingPage from '@/pages/dashboard/DepartmentRoutingPage'
 import FiltersPage from '@/pages/settings/FiltersPage'
 import { Toaster } from "@/components/ui/toaster"
 import ErrorBoundary from "@/components/ErrorBoundary"
@@ -60,6 +61,7 @@ function App() {
                                 <Route path="/connect" element={<EmailConnectPage />} />
                                 <Route path="/classify" element={<EmailClassifyPage />} />
                                 <Route path="/calendar" element={<CalendarPage />} />
+                                <Route path="/departments" element={<DepartmentRoutingPage />} />
                                 <Route path="/settings" element={<SettingsPage />} />
                                 <Route path="/settings/filters" element={<FiltersPage />} />
                             </Route>

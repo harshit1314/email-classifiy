@@ -313,8 +313,8 @@ const EmailsPage = () => {
                                 {searchResults !== null ? 'Search Results' : 'All Emails'}
                             </h2>
                             <p className="text-sm text-muted-foreground">
-                                {searchResults !== null 
-                                    ? `Found ${searchResults.length} matching emails` 
+                                {searchResults !== null
+                                    ? `Found ${searchResults.length} matching emails`
                                     : `Manage and classify your emails`}
                             </p>
                         </div>
@@ -605,6 +605,13 @@ const EmailsPage = () => {
                                                             </PopoverContent>
                                                         </Popover>
                                                     </div>
+                                                )}
+
+                                                {/* Department Badge */}
+                                                {email.department && (
+                                                    <span className="text-xs px-3 py-1.5 rounded-full font-semibold bg-teal-50 text-teal-700 border border-teal-200 shadow-sm flex items-center gap-1">
+                                                        🏢 {email.department}
+                                                    </span>
                                                 )}
 
                                                 {/* Entity Badges */}

@@ -21,29 +21,41 @@ class DepartmentRoutingService:
             # Sales Department
             "Sales_Inquiry": "Sales",
             "Partnership_Offer": "Sales",
+            "sales": "Sales",
             
             # HR Department
             "HR_Inquiry": "HR",
+            "hr": "HR",
             
             # Finance Department
             "Billing_Issue": "Finance",
+            "finance": "Finance",
             
             # Support Department
             "Support_Request": "Support",
+            "customer_service": "Support",
+            "it_support": "Support",
             
             # Marketing Department
             "General_Feedback": "Marketing",
+            "marketing": "Marketing",
+            "general": "Marketing",
             
             # IT/Admin Department
             "Spam": "IT",
             "Unknown": "IT",
-            
-            # Fallback for other categories
             "spam": "IT",
+            "it": "IT",
+            "pending": "IT",
+            
+            # Additional categories
             "important": "Support",
             "promotion": "Marketing",
             "social": "Marketing",
-            "updates": "Support"
+            "updates": "Support",
+            "legal": "IT",
+            "management": "IT",
+            "operations": "Support"
         }
         
         # Department descriptions

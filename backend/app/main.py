@@ -605,6 +605,138 @@ async def monitor_data():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==================== Department Routing Endpoints ====================
+
+@app.get("/api/departments")
+async def get_all_departments():
+    """
+    Get all configured departments
+    Returns list of departments with their information
+    """
+    try:
+        if not department_routing_service:
+            raise HTTPException(status_code=503, detail="Department routing service not available")
+        
+        departments = department_routing_service.get_all_departments()
+        return {
+            "departments": departments,
+            "count": len(departments)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting departments: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# IMPORTANT: Specific paths must come BEFORE dynamic path parameters
+@app.get("/api/departments/mappings")
+async def get_all_category_mappings():
+    """
+    Get all category to department mappings
+    """
+    try:
+        if not department_routing_service:
+            raise HTTPException(status_code=503, detail="Department routing service not available")
+        
+        return {
+            "mappings": department_routing_service.category_to_department,
+            "count": len(department_routing_service.category_to_department)
+        }
+    except Exception as e:
+        logger.error(f"Error getting category mappings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class CategoryMappingUpdate(BaseModel):
+    """Model for updating category to department mapping"""
+    category: str
+    department: str
+
+@app.post("/api/departments/mapping")
+async def update_category_mapping(mapping: CategoryMappingUpdate):
+    """
+    Update category to department mapping
+    
+    Request body:
+    {
+        "category": "Sales_Inquiry",
+        "department": "Sales"
+    }
+    """
+    try:
+        if not department_routing_service:
+            raise HTTPException(status_code=503, detail="Department routing service not available")
+        
+        success = department_routing_service.update_category_mapping(
+            mapping.category, 
+            mapping.department
+        )
+        
+        if success:
+            return {
+                "status": "success",
+                "category": mapping.category,
+                "department": mapping.department,
+                "message": f"Category '{mapping.category}' now routes to '{mapping.department}'"
+            }
+        else:
+            raise HTTPException(status_code=400, detail=f"Failed to update mapping")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating category mapping: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/departments/{department_name}")
+async def get_department_info(department_name: str):
+    """
+    Get information about a specific department
+    """
+    try:
+        if not department_routing_service:
+            raise HTTPException(status_code=503, detail="Department routing service not available")
+        
+        dept_info = department_routing_service.get_department_info(department_name)
+        if not dept_info:
+            raise HTTPException(status_code=404, detail=f"Department '{department_name}' not found")
+        
+        return dept_info
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting department info: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/analytics/by-department")
+async def get_analytics_by_department():
+    """
+    Get email statistics grouped by department
+    Analyzes email distribution across departments
+    """
+    try:
+        if not department_routing_service:
+            raise HTTPException(status_code=503, detail="Department routing service not available")
+        
+        # Get statistics from database
+        stats = processing_service.get_statistics()
+        
+        # Get category counts from stats
+        category_counts = stats.get("category_distribution", {})
+        
+        # Map to departments
+        department_summary = department_routing_service.get_emails_by_department_summary(category_counts)
+        
+        return {
+            "department_statistics": department_summary,
+            "total_emails": sum(dept["total"] for dept in department_summary.values()),
+            "timestamp": datetime.now().isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting department analytics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ==================== Live Email Ingestion Endpoints ====================
 
 class GmailCredentials(BaseModel):
