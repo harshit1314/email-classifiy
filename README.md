@@ -36,6 +36,8 @@ This AI Email Classifier is an enterprise-grade solution designed to automate em
 - **Gmail & Outlook Integration**: Direct API integration for automatic email ingestion
 - **Smart Routing**: Automatic department routing and priority assignment
 - **Advanced Analytics**: Comprehensive dashboards with statistics, trends, and insights
+- **Model Performance Tracking**: 🆕 Confusion matrices, per-category metrics, misclassification analysis
+- **Algorithm Benchmarking**: 🆕 Compare 6 ML algorithms with cross-validation
 - **Sentiment Analysis**: Understand the emotional tone of emails
 - **Entity Extraction**: Automatically extract key information (dates, names, amounts)
 - **Auto-Reply System**: Configurable automated responses
@@ -85,6 +87,26 @@ This AI Email Classifier is an enterprise-grade solution designed to automate em
 - **Export Reports**: CSV/JSON data exports
 - **Activity Logs**: Complete audit trail
 - **System Health Monitoring**: Service status tracking
+- **Enhanced Analytics Dashboard**: 🆕
+  - **Time-Series Charts**: Email volume trends over 30 days
+  - **Activity Heatmap**: 7×24 grid showing email patterns
+  - **Trend Indicators**: Week-over-week comparison with ↑/↓ arrows
+  - **Category Trends**: Visual mini-charts for top categories
+
+### 🎯 Model Performance & Evaluation
+- **Performance Dashboard**: 🆕
+  - **Confusion Matrix**: Visual heatmap of predictions vs actual
+  - **Per-Category Metrics**: Precision, recall, F1-score for each category
+  - **Confidence Distribution**: Histogram of model confidence levels
+  - **Misclassified Emails**: Review and correct classification errors
+  - **Overall Accuracy**: Real-time accuracy tracking
+- **Model Comparison Study**: 🆕
+  - **6 Algorithm Benchmarking**: Naive Bayes, Logistic Regression, SVM, Random Forest, Gradient Boosting
+  - **5-Fold Cross-Validation**: Rigorous performance evaluation
+  - **Performance Rankings**: Ranked by composite score (F1 + Accuracy)
+  - **Speed Comparison**: Training time and inference speed metrics
+  - **Visual Comparisons**: Bar charts and performance graphs
+  - **Best Model Identification**: Automatic recommendation based on metrics
 
 ### 🔐 Security & Access Control
 - **User Authentication**: JWT-based secure authentication
@@ -626,19 +648,23 @@ ai-email-classifier/
 │   │   │       └── Sidebar.jsx
 │   │   ├── pages/                          # Page components
 │   │   │   ├── dashboard/
-│   │   │   │   ├── DashboardPage.jsx      # Main dashboard
-│   │   │   │   ├── EmailsPage.jsx         # Email list
-│   │   │   │   ├── CalendarPage.jsx       # Calendar view
-│   │   │   │   ├── SettingsPage.jsx       # Settings
-│   │   │   │   └── LiveIngestionsPage.jsx # Real-time view
+│   │   │   │   ├── DashboardPage.jsx           # Main dashboard
+│   │   │   │   ├── EmailsPage.jsx              # Email list
+│   │   │   │   ├── DepartmentRoutingPage.jsx   # Department routing
+│   │   │   │   ├── PerformancePage.jsx         # 🆕 Model performance metrics
+│   │   │   │   ├── AnalyticsPage.jsx           # 🆕 Enhanced analytics
+│   │   │   │   ├── ModelComparisonPage.jsx     # 🆕 Algorithm comparison
+│   │   │   │   ├── CalendarPage.jsx            # Calendar view
+│   │   │   │   ├── SettingsPage.jsx            # Settings
+│   │   │   │   └── LiveIngestionsPage.jsx      # Real-time view
 │   │   │   ├── email/
-│   │   │   │   ├── EmailClassifyPage.jsx  # Manual classification
-│   │   │   │   └── EmailConnectPage.jsx   # Email connection
+│   │   │   │   ├── EmailClassifyPage.jsx       # Manual classification
+│   │   │   │   └── EmailConnectPage.jsx        # Email connection
 │   │   │   ├── auth/
-│   │   │   │   ├── LoginPage.jsx          # Login
-│   │   │   │   └── RegisterPage.jsx       # Registration
+│   │   │   │   ├── LoginPage.jsx               # Login
+│   │   │   │   └── RegisterPage.jsx            # Registration
 │   │   │   └── settings/
-│   │   │       └── FiltersPage.jsx        # Filter management
+│   │   │       └── FiltersPage.jsx             # Filter management
 │   │   ├── context/                        # React context
 │   │   └── lib/                            # Utilities
 │   ├── package.json                        # Node dependencies
@@ -838,6 +864,71 @@ python create_user.py
 1. Go to **Calendar** page
 2. View extracted meeting and event information
 3. Sync with external calendars (if configured)
+
+### 6. Model Performance Dashboard 🆕
+
+Track your classifier's accuracy and identify improvement opportunities:
+
+1. Navigate to **Performance** page (violet BarChart3 icon)
+2. View key metrics:
+   - **Overall Accuracy**: Model's current accuracy percentage
+   - **Confusion Matrix**: Visual heatmap showing predictions vs actual categories
+   - **Per-Category Performance**: Precision, recall, F1-score for each email category
+   - **Confidence Distribution**: Histogram of model confidence levels
+3. Review **Misclassified Emails**:
+   - Click on misclassified emails to view details
+   - Correct categories directly from this page
+   - Corrections feed back into model retraining
+
+**Use Case**: Identify which categories need better training data, spot systematic misclassifications
+
+### 7. Enhanced Analytics Dashboard 🆕
+
+Visualize email patterns and trends:
+
+1. Navigate to **Analytics** page (pink TrendingUp icon)
+2. Explore visualizations:
+   - **Time-Series Line Chart**: Email volume over 30 days
+   - **Activity Heatmap**: 7x24 grid showing peak email times
+   - **Trend Indicators**: Week-over-week comparisons (↑/↓)
+   - **Category Trends**: Mini bar charts for top 5 categories
+3. Click **Refresh** to update with latest data
+4. Use insights for:
+   - Resource planning (identify peak hours)
+   - Department workload distribution
+   - Trend analysis for reporting
+
+**Use Case**: Understand email patterns, optimize email processing schedules
+
+### 8. Model Comparison Study 🆕
+
+Benchmark multiple ML algorithms to justify model selection:
+
+1. Navigate to **Models** page (indigo Cpu icon)
+2. Click **"Start Comparison"** button
+3. Wait 2-3 minutes while system:
+   - Trains 6 different algorithms
+   - Performs 5-fold cross-validation on each
+   - Calculates performance metrics
+   - Measures training and inference speed
+4. Review results:
+   - **Rankings Table**: Models ranked by performance (🥇🥈🥉 medals for top 3)
+   - **Performance Charts**: Side-by-side comparison of accuracy, precision, recall, F1
+   - **Speed Analysis**: Training time and inference speed trade-offs
+   - **Best Models Cards**: Highlights for best accuracy, F1, training speed, inference speed
+5. Use results for:
+   - BTech project report (15-20 pages of content)
+   - Model selection justification
+   - Algorithm comparison analysis
+
+**Models Compared**:
+- Naive Bayes (Multinomial & Complement)
+- Logistic Regression
+- Linear SVM
+- Random Forest
+- Gradient Boosting
+
+**Use Case**: Demonstrate ML research, justify final model selection, generate report content
 
 ## 🛠️ Development
 

@@ -800,30 +800,5 @@ def get_improved_classifier() -> ImprovedEmailClassifier:
     return _improved_classifier
 
 
-if __name__ == "__main__":
-    # Train and test the model
-    logging.basicConfig(level=logging.INFO)
-    classifier = ImprovedEmailClassifier()
-    
-    # Test classification
-    test_emails = [
-        ("Win Free Money Now!", "Click here to claim your prize worth $1000000", "spam"),
-        ("Meeting Tomorrow at 10 AM", "Please confirm your attendance for the quarterly review meeting", "important"),
-        ("50% Off Everything Today", "Flash sale! Get amazing discounts on all products", "promotion"),
-    ]
-    
-    print("\n" + "="*60)
-    print("Testing Improved Email Classifier")
-    print("="*60 + "\n")
-    
-    for subject, body, expected in test_emails:
-        result = classifier.classify(subject, body)
-        print(f"Subject: {subject}")
-        print(f"Expected: {expected}")
-        print(f"Predicted: {result['category']}")
-        print(f"Confidence: {result['confidence']:.1%}")
-        print(f"Top 3 probabilities:")
-        sorted_probs = sorted(result['probabilities'].items(), key=lambda x: x[1], reverse=True)[:3]
-        for cat, prob in sorted_probs:
-            print(f"  {cat}: {prob:.1%}")
-        print("-" * 60 + "\n")
+    return _improved_classifier
+

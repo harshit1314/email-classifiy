@@ -65,14 +65,12 @@ const DashboardPage = () => {
                 axios.get(`${API_URL}/api/email/status`)
             ])
 
-            // Calculate category breakdown from classifications - DYNAMIC
+            // Calculate category breakdown from classifications for visualization
             const categoryBreakdown = {}
             let totalConfidence = 0
             let classifiedCount = 0
-            let totalEmails = 0
 
             classRes.data.classifications?.forEach(email => {
-                totalEmails++
                 // Only count valid categories (exclude pending, null, or empty)
                 if (email.category && email.category !== 'pending' && email.category.trim() !== '') {
                     // Dynamically count all categories
@@ -85,13 +83,13 @@ const DashboardPage = () => {
                 }
             })
 
-            // Use ONLY calculated values, not backend stats
+            // Use backend statistics for accurate counts (not limited to 1000 fetched emails)
             const enrichedStats = {
-                total_emails: totalEmails,
-                classified_count: classifiedCount,
-                unclassified_count: totalEmails - classifiedCount,
-                average_confidence: classifiedCount > 0 ? totalConfidence / classifiedCount : 0,
-                category_breakdown: categoryBreakdown
+                total_emails: statsRes.data.total_emails || 0,
+                classified_count: statsRes.data.classified_count || 0,
+                unclassified_count: statsRes.data.unclassified_count || 0,
+                average_confidence: statsRes.data.average_confidence || 0,
+                category_breakdown: statsRes.data.category_breakdown || categoryBreakdown
             }
 
             // Store current stats as previous stats for next fetch
@@ -128,8 +126,8 @@ const DashboardPage = () => {
                             </h2>
                             <p className="text-sm text-muted-foreground">Monitor your email classification performance</p>
                         </div>
-                        <Button 
-                            onClick={() => fetchData(false)} 
+                        <Button
+                            onClick={() => fetchData(false)}
                             disabled={refreshing}
                             className="shadow-lg hover:shadow-xl transition-all"
                         >
@@ -145,9 +143,9 @@ const DashboardPage = () => {
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
                                 <CardTitle className="text-sm font-medium text-blue-100">Total Emails</CardTitle>
                                 {!loading && previousStats && calculateTrend(stats.total_emails, previousStats.total_emails) && (
-                                    <span className={cn("text-xs font-semibold px-2 py-1 rounded-full", 
-                                        calculateTrend(stats.total_emails, previousStats.total_emails).isUp 
-                                            ? "bg-green-500/20 text-green-100" 
+                                    <span className={cn("text-xs font-semibold px-2 py-1 rounded-full",
+                                        calculateTrend(stats.total_emails, previousStats.total_emails).isUp
+                                            ? "bg-green-500/20 text-green-100"
                                             : "bg-red-500/20 text-red-100")}>
                                         {calculateTrend(stats.total_emails, previousStats.total_emails).isUp ? "↑" : "↓"}{calculateTrend(stats.total_emails, previousStats.total_emails).percent}%
                                     </span>
@@ -237,8 +235,8 @@ const DashboardPage = () => {
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold">Top Categories</h3>
                             {Object.keys(stats.category_breakdown).length > 6 && (
-                                <Button 
-                                    variant="outline" 
+                                <Button
+                                    variant="outline"
                                     size="sm"
                                     onClick={() => setShowAllCategories(!showAllCategories)}
                                 >
@@ -325,9 +323,9 @@ const DashboardPage = () => {
                                             <Tooltip
                                                 formatter={(value, name) => [`${value} emails`, name]}
                                             />
-                                            <Legend 
-                                                layout="vertical" 
-                                                align="right" 
+                                            <Legend
+                                                layout="vertical"
+                                                align="right"
                                                 verticalAlign="middle"
                                                 wrapperStyle={{ paddingLeft: '20px' }}
                                             />

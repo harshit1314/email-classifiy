@@ -88,6 +88,8 @@ sentiment_service = None
 department_routing_service = None
 priority_detector = None
 entity_extractor = None
+performance_service = None
+model_comparison_service = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -107,7 +109,7 @@ async def lifespan(app: FastAPI):
     global notification_service, retraining_service, auto_reply_service, filter_service
     global scheduler_service, calendar_service, report_service, task_service, webhook_service
     global sentiment_service, department_routing_service
-    global priority_detector, entity_extractor
+    global priority_detector, entity_extractor, performance_service, model_comparison_service
     
     # Initialize services (following the architecture)
     # Using BERT/TF-IDF only - LLM/OpenAI disabled
@@ -139,6 +141,16 @@ async def lifespan(app: FastAPI):
     priority_detector = PriorityDetector()
     entity_extractor = EntityExtractor()
     logger.info("✅ Priority Detector and Entity Extractor initialized")
+    
+    # Initialize performance tracking service
+    from app.services.performance_service import PerformanceService
+    performance_service = PerformanceService()
+    logger.info("✅ Performance Service initialized")
+    
+    # Initialize model comparison service
+    from app.services.model_comparison_service import ModelComparisonService
+    model_comparison_service = ModelComparisonService()
+    logger.info("✅ Model Comparison Service initialized")
 
     # Initialize department routing service
     if DEPARTMENT_ROUTING_AVAILABLE:
@@ -546,50 +558,8 @@ async def delete_advanced_rule(rule_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 # ==================== Service 4: Admin Dashboard Endpoints ====================
-
-@app.get("/api/dashboard/statistics")
-async def get_statistics():
-    """Get statistics for admin dashboard"""
-    try:
-        stats = processing_service.get_statistics()
-        return stats
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/dashboard/classifications")
-async def get_classifications(
-    limit: int = 20,  # Reduced default for better performance
-    category: Optional[str] = None, 
-    department: Optional[str] = None,
-    offset: int = 0  # Add pagination offset
-):
-    """
-    Get recent classifications for dashboard with pagination
-    
-    Performance optimizations:
-    - Default limit reduced to 20 for faster loading
-    - Max limit capped at 200 to prevent memory issues
-    - Added offset parameter for pagination
-    """
-    try:
-        # Cap limit at 200 for performance
-        limit = min(limit, 200)
-        
-        classifications = db_logger.get_classifications(
-            limit=limit, 
-            category=category, 
-            department=department,
-            offset=offset
-        )
-        return {
-            "classifications": classifications, 
-            "count": len(classifications),
-            "limit": limit,
-            "offset": offset,
-            "has_more": len(classifications) == limit  # Indicator if more data exists
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# NOTE: Dashboard statistics and classifications endpoints moved to bottom of file
+# with proper authentication (see lines ~3336+)
 
 @app.get("/api/dashboard/monitor")
 async def monitor_data():
@@ -734,6 +704,162 @@ async def get_analytics_by_department():
         raise
     except Exception as e:
         logger.error(f"Error getting department analytics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== Model Performance Metrics Endpoints ====================
+
+@app.get("/api/performance/summary")
+async def get_performance_summary():
+    """
+    Get comprehensive performance summary including accuracy, precision, recall, F1
+    """
+    try:
+        if not performance_service:
+            raise HTTPException(status_code=503, detail="Performance service not available")
+        
+        summary = performance_service.get_performance_summary()
+        return summary
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting performance summary: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/performance/confusion-matrix")
+async def get_confusion_matrix(limit: int = 1000):
+    """
+    Get confusion matrix for classification performance
+    Only includes emails where user has corrected the category
+    """
+    try:
+        if not performance_service:
+            raise HTTPException(status_code=503, detail="Performance service not available")
+        
+        confusion_data = performance_service.calculate_confusion_matrix(limit=limit)
+        return confusion_data
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error calculating confusion matrix: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/performance/metrics")
+async def get_per_category_metrics():
+    """
+    Get precision, recall, and F1-score per category
+    """
+    try:
+        if not performance_service:
+            raise HTTPException(status_code=503, detail="Performance service not available")
+        
+        metrics = performance_service.calculate_per_category_metrics()
+        return metrics
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error calculating category metrics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/performance/misclassified")
+async def get_misclassified_emails(limit: int = 50):
+    """
+    Get list of misclassified emails that were corrected by user
+    """
+    try:
+        if not performance_service:
+            raise HTTPException(status_code=503, detail="Performance service not available")
+        
+        emails = performance_service.get_misclassified_emails(limit=limit)
+        return {"misclassified_emails": emails, "total": len(emails)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting misclassified emails: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/performance/confidence-distribution")
+async def get_confidence_distribution():
+    """
+    Get distribution of confidence scores
+    """
+    try:
+        if not performance_service:
+            raise HTTPException(status_code=503, detail="Performance service not available")
+        
+        distribution = performance_service.get_confidence_distribution()
+        return distribution
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting confidence distribution: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== Model Comparison Endpoints ====================
+
+@app.post("/api/models/compare")
+async def train_and_compare_models():
+    """Train and compare multiple ML algorithms (may take a few minutes)"""
+    try:
+        if not model_comparison_service:
+            raise HTTPException(status_code=503, detail="Model comparison service not available")
+        
+        logger.info("Starting model comparison (this may take 2-3 minutes)...")
+        results = model_comparison_service.train_and_evaluate_models()
+        
+        if "error" in results:
+            raise HTTPException(status_code=400, detail=results["error"])
+        
+        return results
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error comparing models: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/models/comparison-results")
+async def get_comparison_results():
+    """Get the cached model comparison results"""
+    try:
+        if not model_comparison_service:
+            raise HTTPException(status_code=503, detail="Model comparison service not available")
+        
+        results = model_comparison_service.get_comparison_summary()
+        
+        if not results or "error" in results:
+            raise HTTPException(
+                status_code=404, 
+                detail="No comparison results available. Run POST /api/models/compare first."
+            )
+        
+        return results
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting comparison results: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/models/rankings")
+async def get_model_rankings():
+    """Get models ranked by performance"""
+    try:
+        if not model_comparison_service:
+            raise HTTPException(status_code=503, detail="Model comparison service not available")
+        
+        rankings = model_comparison_service.get_model_rankings()
+        
+        if not rankings:
+            raise HTTPException(
+                status_code=404,
+                detail="No rankings available. Run POST /api/models/compare first."
+            )
+        
+        return {"rankings": rankings, "total": len(rankings)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting model rankings: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1604,6 +1730,43 @@ async def export_report_pdf(current_user: User = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/export/performance/pdf")
+async def export_performance_pdf(current_user: User = Depends(get_current_user)):
+    """Export performance report as PDF"""
+    try:
+        metrics = performance_service.get_full_metrics()
+        pdf_content = export_service.export_performance_report_pdf(metrics)
+        
+        from fastapi.responses import Response
+        return Response(
+            content=pdf_content,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=performance_report_{datetime.now().strftime('%Y%m%d')}.pdf"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/export/comparison/pdf")
+async def export_comparison_pdf(current_user: User = Depends(get_current_user)):
+    """Export model comparison report as PDF"""
+    try:
+        results = model_comparison_service.get_comparison_summary()
+        if not results:
+            raise HTTPException(status_code=404, detail="No comparison results found. Please run comparison first.")
+            
+        pdf_content = export_service.export_comparison_report_pdf(results)
+        
+        from fastapi.responses import Response
+        return Response(
+            content=pdf_content,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=model_comparison_{datetime.now().strftime('%Y%m%d')}.pdf"}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== Analytics Endpoints ====================
 
 @app.get("/api/analytics/insights")
@@ -2294,6 +2457,36 @@ async def generate_smart_reply(
         raise
     except Exception as e:
         logger.error(f"Reply generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/analytics/heatmap")
+async def get_email_heatmap(days: int = 30):
+    """Get email volume heatmap by hour and weekday"""
+    try:
+        if not analytics_service:
+            raise HTTPException(status_code=503, detail="Analytics service not available")
+        
+        heatmap_data = analytics_service.get_heatmap_data(days=days)
+        return heatmap_data
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating heatmap: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/analytics/trends")
+async def get_trend_indicators():
+    """Get trend indicators (comparing recent vs previous period)"""
+    try:
+        if not analytics_service:
+            raise HTTPException(status_code=503, detail="Analytics service not available")
+        
+        trends = analytics_service.get_trend_indicators()
+        return trends
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error calculating trends: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # ==================== Custom Reports Endpoints ====================
@@ -3092,6 +3285,62 @@ async def verify_email_routing(
     except HTTPException:
         raise
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================================
+# DASHBOARD ENDPOINTS
+# ============================================================================
+
+@app.get("/api/dashboard/statistics")
+async def get_dashboard_statistics(current_user: User = Depends(get_current_user)):
+    """Get dashboard statistics including total emails, classified count, and category breakdown"""
+    try:
+        # Use get_classifications which already handles NULL user_ids correctly
+        classifications = db_logger.get_classifications(user_id=current_user.id, limit=10000)
+        
+        total_emails = len(classifications)
+        classified_count = 0
+        unclassified_count = 0
+        total_confidence = 0
+        category_breakdown = {}
+        
+        for email in classifications:
+            category = email.get("category")
+            confidence = email.get("confidence", 0)
+            
+            # All emails from get_classifications are already filtered (no pending)
+            classified_count += 1
+            total_confidence += confidence
+            
+            # Build category breakdown
+            if category not in category_breakdown:
+                category_breakdown[category] = 0
+            category_breakdown[category] += 1
+        
+        average_confidence = total_confidence / classified_count if classified_count > 0 else 0
+        
+        return {
+            "total_emails": total_emails,
+            "classified_count": classified_count,
+            "unclassified_count": 0,  # get_classifications already excludes unclassified
+            "average_confidence": average_confidence,
+            "category_breakdown": category_breakdown
+        }
+    except Exception as e:
+        logger.error(f"Error fetching dashboard statistics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/dashboard/classifications")
+async def get_dashboard_classifications(
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
+):
+    """Get recent classifications for dashboard display"""
+    try:
+        classifications = db_logger.get_classifications(user_id=current_user.id, limit=limit)
+        return {"classifications": classifications, "count": len(classifications)}
+    except Exception as e:
+        logger.error(f"Error fetching classifications: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

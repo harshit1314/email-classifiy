@@ -21,9 +21,6 @@ class AnalyticsService:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        print(f"DEBUG: AnalyticsService connecting to {self.db_path}")
-        print(f"DEBUG: Checking insights for last {days} days")
-        
         # Date filtering logic
         date_condition = "timestamp >= date('now', '-' || ? || ' days')"
         date_params = [days]
@@ -53,7 +50,6 @@ class AnalyticsService:
         
         cursor.execute(query, tuple(params))
         rows = cursor.fetchall()
-        print(f"DEBUG: Top senders query returned {len(rows)} rows")
         top_senders = [{"sender": row[0], "count": row[1]} for row in rows]
         
         # Peak hours analysis
@@ -252,6 +248,142 @@ class AnalyticsService:
             "sentiment_distribution": email_insights.get("sentiment_distribution", {}),
             "period_days": days,
             "daily_trends": email_insights.get("category_trends", {})
+        }
+
+
+    def get_heatmap_data(self, user_id: Optional[int] = None, days: int = 30) -> Dict:
+        """Get email volume heatmap by hour and weekday"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        query = '''
+            SELECT 
+                CAST(strftime('%w', timestamp) AS INTEGER) as weekday,
+                CAST(strftime('%H', timestamp) AS INTEGER) as hour,
+                COUNT(*) as count
+            FROM classifications
+            WHERE timestamp > datetime('now', '-' || ? || ' days')
+        '''
+        params = [days]
+        
+        if user_id:
+            query += " AND (user_id = ? OR user_id IS NULL)"
+            params.append(user_id)
+        
+        query += " GROUP BY weekday, hour"
+        cursor.execute(query, tuple(params))
+        
+        # Initialize 7x24 matrix (7 days, 24 hours)
+        heatmap = [[0 for _ in range(24)] for _ in range(7)]
+        
+        for row in cursor.fetchall():
+            weekday, hour, count = row
+            heatmap[weekday][hour] = count
+        
+        conn.close()
+        
+        return {
+            "heatmap": heatmap,
+            "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+            "hours": list(range(24))
+        }
+    
+    def get_trend_indicators(self, user_id: Optional[int] = None) -> Dict:
+        """Calculate trend indicators comparing recent period to previous period"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Last 7 days vs previous 7 days
+        recent_query = '''
+            SELECT COUNT(*) as count, AVG(confidence) as avg_conf
+            FROM classifications
+            WHERE timestamp > datetime('now', '-7 days')
+        '''
+        previous_query = '''
+            SELECT COUNT(*) as count, AVG(confidence) as avg_conf
+            FROM classifications
+            WHERE timestamp BETWEEN datetime('now', '-14 days') AND datetime('now', '-7 days')
+        '''
+        
+        if user_id:
+            recent_query += " AND (user_id = ? OR user_id IS NULL)"
+            previous_query += " AND (user_id = ? OR user_id IS NULL)"
+            cursor.execute(recent_query, (user_id,))
+        else:
+            cursor.execute(recent_query)
+        
+        recent = cursor.fetchone()
+        recent_count = recent[0] or 0
+        recent_conf = recent[1] or 0
+        
+        if user_id:
+            cursor.execute(previous_query, (user_id,))
+        else:
+            cursor.execute(previous_query)
+        
+        previous = cursor.fetchone()
+        previous_count = previous[0] or 1  # Avoid division by zero
+        previous_conf = previous[1] or 0
+        
+        # Calculate percentage changes
+        volume_change = ((recent_count - previous_count) / previous_count * 100) if previous_count > 0 else 0
+        confidence_change = ((recent_conf - previous_conf) / previous_conf * 100) if previous_conf > 0 else 0
+        
+        # Category-wise trends
+        query = '''
+            SELECT category, COUNT(*) as count
+            FROM classifications
+            WHERE timestamp > datetime('now', '-7 days')
+        '''
+        if user_id:
+            query += " AND (user_id = ? OR user_id IS NULL)"
+            cursor.execute(query, (user_id,))
+        else:
+            cursor.execute(query)
+        
+        recent_categories = {row[0]: row[1] for row in cursor.fetchall()}
+        
+        query = '''
+            SELECT category, COUNT(*) as count
+            FROM classifications
+            WHERE timestamp BETWEEN datetime('now', '-14 days') AND datetime('now', '-7 days')
+        '''
+        if user_id:
+            query += " AND (user_id = ? OR user_id IS NULL)"
+            cursor.execute(query, (user_id,))
+        else:
+            cursor.execute(query)
+        
+        previous_categories = {row[0]: row[1] for row in cursor.fetchall()}
+        
+        category_trends = {}
+        for category in set(list(recent_categories.keys()) + list(previous_categories.keys())):
+            recent_cat_count = recent_categories.get(category, 0)
+            previous_cat_count = previous_categories.get(category, 1)
+            change = ((recent_cat_count - previous_cat_count) / previous_cat_count * 100) if previous_cat_count > 0 else 0
+            category_trends[category] = {
+                "recent_count": recent_cat_count,
+                "previous_count": previous_cat_count,
+                "change_percent": round(change, 1),
+                "trend": "up" if change > 5 else "down" if change < -5 else "stable"
+            }
+        
+        conn.close()
+        
+        return {
+            "volume": {
+                "recent": recent_count,
+                "previous": previous_count,
+                "change_percent": round(volume_change, 1),
+                "trend": "up" if volume_change > 5 else "down" if volume_change < -5 else "stable"
+            },
+            "confidence": {
+                "recent": round(recent_conf, 2),
+                "previous": round(previous_conf, 2),
+                "change_percent": round(confidence_change, 1),
+                "trend": "up" if confidence_change > 2 else "down" if confidence_change < -2 else "stable"
+            },
+            "categories": category_trends
         }
 
 

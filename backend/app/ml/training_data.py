@@ -361,11 +361,3 @@ def get_training_stats():
         "total_examples": len(ENTERPRISE_TRAINING_DATA),
         "by_department": by_dept
     }
-
-
-if __name__ == "__main__":
-    stats = get_training_stats()
-    print(f"Total training examples: {stats['total_examples']}")
-    print("\nBy department:")
-    for dept, count in sorted(stats['by_department'].items(), key=lambda x: -x[1]):
-        print(f"  {dept}: {count}")
