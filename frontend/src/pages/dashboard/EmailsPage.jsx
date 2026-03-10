@@ -95,9 +95,10 @@ const EmailsPage = () => {
             let classifiedCount = 0
 
             classRes.data.classifications?.forEach(email => {
-                // Only count valid categories (exclude pending, null, or empty)
-                if (email.category && email.category !== 'pending' && email.category.trim() !== '') {
-                    categories[email.category] = (categories[email.category] || 0) + 1
+                // Use display_category (corrected if available) for breakdown counts
+                const cat = email.display_category || email.category
+                if (cat && cat !== 'pending' && cat.trim() !== '') {
+                    categories[cat] = (categories[cat] || 0) + 1
                     classifiedCount += 1
                 }
             })
@@ -300,7 +301,7 @@ const EmailsPage = () => {
 
     const filteredEmails = selectedCategory === 'all'
         ? allClassifications
-        : allClassifications.filter(email => email.category === selectedCategory)
+        : allClassifications.filter(email => (email.display_category || email.category) === selectedCategory)
 
     return (
         <div className="flex-1 flex flex-col h-screen bg-transparent">
@@ -560,10 +561,11 @@ const EmailsPage = () => {
                                                 {email.body || email.email_body || 'No body content'}
                                             </p>
                                             <div className="flex flex-wrap gap-2 mb-4">
-                                                {email.category && (
+                                                {(email.display_category || email.category) && (
                                                     <div className="flex items-center gap-2">
-                                                        <span className={cn("text-xs px-3 py-1.5 rounded-full font-bold shadow-sm", getCategoryColor(email.category))}>
-                                                            {email.category.replace(/_/g, ' ').toUpperCase()}
+                                                        <span className={cn("text-xs px-3 py-1.5 rounded-full font-bold shadow-sm", getCategoryColor(email.display_category || email.category))}>
+                                                            {(email.display_category || email.category).replace(/_/g, ' ').toUpperCase()}
+                                                            {email.display_category && email.display_category !== email.category && <span className="ml-1 opacity-70">✓</span>}
                                                         </span>
                                                         <Popover>
                                                             <PopoverTrigger asChild>

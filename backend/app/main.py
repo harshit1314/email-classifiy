@@ -689,8 +689,14 @@ async def get_analytics_by_department():
         # Get statistics from database
         stats = processing_service.get_statistics()
         
-        # Get category counts from stats
-        category_counts = stats.get("category_distribution", {})
+        # Get category counts from stats — exclude unclassified entries (pending/unknown/empty)
+        # so the total matches the classified count shown on the dashboard
+        EXCLUDED_CATEGORIES = {'pending', 'unknown', 'unclassified', ''}
+        category_counts = {
+            cat: count
+            for cat, count in stats.get("category_distribution", {}).items()
+            if cat and cat.lower() not in EXCLUDED_CATEGORIES
+        }
         
         # Map to departments
         department_summary = department_routing_service.get_emails_by_department_summary(category_counts)
@@ -2620,7 +2626,8 @@ async def get_calendar_events(
     """Get calendar events"""
     try:
         calendar_service = CalendarService()
-        events = calendar_service.get_upcoming_events(limit)
+        # Fetch all user events instead of just upcoming to allow filtering on frontend
+        events = calendar_service.get_user_events(current_user.id)
         return {"events": events}
     except Exception as e:
         logger.error(f"Calendar error: {str(e)}")

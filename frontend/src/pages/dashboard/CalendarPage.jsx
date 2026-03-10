@@ -467,6 +467,52 @@ const CalendarPage = () => {
                                     )}
                                 </CardContent>
                             </Card>
+
+                            {/* Past Events */}
+                            <Card className="border-0 shadow-lg bg-gradient-to-br from-gray-100 to-gray-200">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-xl text-gray-700">
+                                        <Clock className="h-5 w-5" />
+                                        Past Events
+                                    </CardTitle>
+                                    <CardDescription className="text-gray-500">Extracted past events</CardDescription>
+                                </CardHeader>
+                                <CardContent className="max-h-[300px] overflow-y-auto">
+                                    {pastEvents.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {pastEvents.slice(0, 10).map((event, idx) => (
+                                                <div
+                                                    key={`past-${idx}`}
+                                                    className="group rounded-lg bg-white/60 border border-gray-300 p-4 hover:bg-white/80 transition-all duration-200 cursor-pointer"
+                                                    onClick={() => setSelectedEvent(event)}
+                                                >
+                                                    <div className="flex items-start justify-between mb-2">
+                                                        <h4 className="font-semibold text-gray-800 flex items-center gap-2 flex-1">
+                                                            {event.event_title || event.title || event.summary || 'Untitled Event'}
+                                                        </h4>
+                                                    </div>
+                                                    <div className="space-y-1 text-sm text-gray-600">
+                                                        <p className="flex items-center gap-2">
+                                                            <Clock className="h-3 w-3" />
+                                                            {new Date(event.start_time || event.start || event.date).toLocaleString()}
+                                                        </p>
+                                                        {event.location && (
+                                                            <p className="flex items-center gap-2">
+                                                                {event.meeting_link ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+                                                                {event.location}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-6">
+                                            <p className="text-gray-500">No past events</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </div>
                     </div>
                 </div>

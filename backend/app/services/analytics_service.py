@@ -154,11 +154,16 @@ class AnalyticsService:
         
         cursor.execute(query, tuple(params))
         
-        time_series = [
-            {"date": row[0], "count": row[1]}
-            for row in cursor.fetchall()
-        ]
+        # Fill missing dates with 0
+        from datetime import date, timedelta as dt_timedelta
+        date_map = {row[0]: row[1] for row in cursor.fetchall()}
         
+        time_series = []
+        today = date.today()
+        for i in range(days, -1, -1):
+            d = (today - dt_timedelta(days=i)).isoformat()
+            time_series.append({"date": d, "count": date_map.get(d, 0)})
+            
         conn.close()
         return time_series
     
@@ -185,9 +190,18 @@ class AnalyticsService:
         category_series = defaultdict(lambda: defaultdict(int))
         for row in cursor.fetchall():
             category_series[row[1]][row[0]] = row[2]
+            
+        # Fill missing dates for each category
+        from datetime import date, timedelta as dt_timedelta
+        today = date.today()
+        dates_range = [(today - dt_timedelta(days=i)).isoformat() for i in range(days, -1, -1)]
+        
+        filled_series = {}
+        for category, date_data in category_series.items():
+            filled_series[category] = {d: date_data.get(d, 0) for d in dates_range}
         
         conn.close()
-        return dict(category_series)
+        return filled_series
     
     def forecast_email_volume(self, user_id: Optional[int] = None, days_ahead: int = 7) -> Dict:
         """Simple forecast based on historical averages"""
@@ -322,12 +336,23 @@ class AnalyticsService:
             cursor.execute(previous_query)
         
         previous = cursor.fetchone()
-        previous_count = previous[0] or 1  # Avoid division by zero
+        previous_count = previous[0] or 0
         previous_conf = previous[1] or 0
         
         # Calculate percentage changes
-        volume_change = ((recent_count - previous_count) / previous_count * 100) if previous_count > 0 else 0
-        confidence_change = ((recent_conf - previous_conf) / previous_conf * 100) if previous_conf > 0 else 0
+        if previous_count == 0:
+            volume_change = 100.0 if recent_count > 0 else 0.0
+        else:
+            volume_change = ((recent_count - previous_count) / previous_count * 100)
+            if previous_count < 10 and volume_change > 100:
+                volume_change = 100.0
+                
+        # Use absolute percentage points for confidence change
+        if previous_conf == 0:
+            confidence_change = (recent_conf) * 100
+        else:
+            confidence_change = (recent_conf - previous_conf) * 100
+        
         
         # Category-wise trends
         query = '''
@@ -359,8 +384,15 @@ class AnalyticsService:
         category_trends = {}
         for category in set(list(recent_categories.keys()) + list(previous_categories.keys())):
             recent_cat_count = recent_categories.get(category, 0)
-            previous_cat_count = previous_categories.get(category, 1)
-            change = ((recent_cat_count - previous_cat_count) / previous_cat_count * 100) if previous_cat_count > 0 else 0
+            previous_cat_count = previous_categories.get(category, 0)
+            
+            if previous_cat_count == 0:
+                change = 100.0 if recent_cat_count > 0 else 0.0
+            else:
+                change = ((recent_cat_count - previous_cat_count) / previous_cat_count * 100)
+                if previous_cat_count < 10 and change > 100:
+                    change = 100.0
+                
             category_trends[category] = {
                 "recent_count": recent_cat_count,
                 "previous_count": previous_cat_count,

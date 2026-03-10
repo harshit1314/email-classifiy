@@ -146,36 +146,45 @@ class CalendarService:
                     if end_time_str:
                         extracted_times.append(end_time_str)
         
-        # Construct datetime objects if we have both date and time
-        if extracted_dates and extracted_times and DATEUTIL_AVAILABLE:
+        # Construct datetime objects if we have date
+        if extracted_dates and DATEUTIL_AVAILABLE:
             try:
                 base_date = extracted_dates[0]
-                start_time_str = extracted_times[0]
                 
-                # Parse time and combine with date
-                time_obj = date_parser.parse(start_time_str)
-                start_datetime = base_date.replace(
-                    hour=time_obj.hour,
-                    minute=time_obj.minute,
-                    second=0,
-                    microsecond=0
-                )
-                meeting_info["start_time"] = start_datetime.isoformat()
-                
-                # Handle end time if available
-                if len(extracted_times) > 1:
-                    end_time_str = extracted_times[1]
-                    end_time_obj = date_parser.parse(end_time_str)
-                    end_datetime = base_date.replace(
-                        hour=end_time_obj.hour,
-                        minute=end_time_obj.minute,
+                if extracted_times:
+                    start_time_str = extracted_times[0]
+                    # Parse time and combine with date
+                    time_obj = date_parser.parse(start_time_str)
+                    start_datetime = base_date.replace(
+                        hour=time_obj.hour,
+                        minute=time_obj.minute,
                         second=0,
                         microsecond=0
                     )
-                    meeting_info["end_time"] = end_datetime.isoformat()
+                    meeting_info["start_time"] = start_datetime.isoformat()
+                    
+                    # Handle end time if available
+                    if len(extracted_times) > 1:
+                        end_time_str = extracted_times[1]
+                        end_time_obj = date_parser.parse(end_time_str)
+                        end_datetime = base_date.replace(
+                            hour=end_time_obj.hour,
+                            minute=end_time_obj.minute,
+                            second=0,
+                            microsecond=0
+                        )
+                        meeting_info["end_time"] = end_datetime.isoformat()
+                    else:
+                        # Default 1 hour duration
+                        meeting_info["end_time"] = (start_datetime + timedelta(hours=1)).isoformat()
                 else:
-                    # Default 1 hour duration
-                    meeting_info["end_time"] = (start_datetime + timedelta(hours=1)).isoformat()
+                    # Default to 9:00 AM if no time specified
+                    if isinstance(base_date, datetime):
+                        start_datetime = base_date.replace(hour=9, minute=0, second=0, microsecond=0)
+                        meeting_info["start_time"] = start_datetime.isoformat()
+                        meeting_info["end_time"] = (start_datetime + timedelta(hours=1)).isoformat()
+                    else:
+                        meeting_info["start_time"] = str(base_date)
             except Exception as e:
                 logger.warning(f"Error constructing datetime: {e}")
         elif extracted_dates and not DATEUTIL_AVAILABLE:

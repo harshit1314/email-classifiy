@@ -338,6 +338,11 @@ class DatabaseLogger:
                     result["entities"] = json.loads(result["entities"])
                 except:
                     result["entities"] = {}
+            # display_category = user correction if available, else original ML prediction
+            # This shows the corrected label in the UI without losing the original for
+            # performance tracking (performance_service compares category vs user_corrected_category)
+            corrected = result.get("user_corrected_category")
+            result["display_category"] = corrected if corrected and corrected.strip() else result.get("category", "")
             results.append(result)
         
         conn.close()
@@ -392,12 +397,14 @@ class DatabaseLogger:
         
         feedback_id = cursor.lastrowid
         
-        # Update the classification with correction - update both category and user_corrected_category
+        # Update the classification with correction - preserve original category for performance tracking.
+        # user_corrected_category stores what the user said it SHOULD be.
+        # category stays as the original ML prediction so performance_service can compare the two.
         cursor.execute('''
             UPDATE classifications 
-            SET category = ?, user_corrected_category = ?, needs_review = 0
+            SET user_corrected_category = ?, needs_review = 0
             WHERE id = ?
-        ''', (corrected_category, corrected_category, classification_id))
+        ''', (corrected_category, classification_id))
         
         conn.commit()
         conn.close()

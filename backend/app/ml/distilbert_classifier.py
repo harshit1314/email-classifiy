@@ -1,12 +1,12 @@
 """
-DistilBERT Email Classifier - Lightweight & Fast
-40% smaller, 60% faster than BERT with 97% accuracy
-No training required - uses zero-shot classification
+DistilBERT Email Classifier - Company Department Focus
+Classifies emails into: HR, Finance, Marketing, Sales, Support
+Uses zero-shot classification with DistilBERT
 """
 import os
 import torch
 import numpy as np
-from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
+from transformers import pipeline
 from typing import Dict, List
 import logging
 
@@ -15,81 +15,74 @@ logger = logging.getLogger(__name__)
 
 class DistilBERTEmailClassifier:
     """
-    DistilBERT-based email classifier
-    - 40% smaller than BERT (260MB vs 440MB)
-    - 60% faster inference
-    - No training required (zero-shot)
-    - 97% of BERT's accuracy
+    DistilBERT-based email classifier for company departments.
+    Uses zero-shot classification - no training data required.
+    Categories: hr, finance, marketing, sales, support
     """
     
     def __init__(self, use_cuda: bool = False):
-        """
-        Initialize DistilBERT classifier
-        
-        Args:
-            use_cuda: Whether to use GPU (if available)
-        """
         self.device = "cuda" if use_cuda and torch.cuda.is_available() else "cpu"
         self.classifier = None
-        self.categories = ["spam", "important", "promotion", "social", "work", "general"]
+        self.categories = ["hr", "finance", "marketing", "sales", "support"]
         
-        # Category descriptions for zero-shot classification
+        # Descriptive labels for zero-shot classification
         self.category_labels = {
-            "spam": "spam, scam, phishing, malware, fraud, lottery, suspicious",
-            "important": "urgent, critical, deadline, meeting, approval, priority",
-            "promotion": "sale, discount, offer, deal, marketing, advertisement",
-            "social": "personal, invitation, party, friend, event, social",
-            "work": "business, project, office, professional, team, corporate",
-            "general": "newsletter, notification, update, information, misc"
+            "hr": "This email is about human resources, hiring, recruitment, employee benefits, payroll, onboarding, leave, performance review, resignation, or job posting",
+            "finance": "This email is about finance, accounting, budget, invoice, expense report, audit, tax, revenue, billing, reimbursement, or treasury",
+            "marketing": "This email is about marketing, campaign, social media, brand, SEO, content, advertising, webinar, newsletter, or lead generation",
+            "sales": "This email is about sales, closing deals, pipeline, prospects, demos, quotas, commissions, partnerships, or customer acquisition",
+            "support": "This email is about customer support, help desk, technical issues, bug reports, troubleshooting, password reset, login problems, error codes, or feature requests"
         }
         
-        # Keywords for boosting confidence
+        # Department keywords for confidence boosting
         self.keywords = {
-            "spam": [
-                "verify account", "click here immediately", "act now", "limited time",
-                "winner", "prize", "lottery", "urgent action required", "suspended",
-                "confirm identity", "unusual activity", "nigerian prince", "free money"
+            "hr": [
+                "payroll", "benefits", "onboarding", "hiring", "recruitment", "employee",
+                "handbook", "interview", "salary", "resume", "pto", "leave request",
+                "vacation", "sick leave", "performance review", "job posting", "candidate",
+                "resignation", "training", "compliance", "401k", "compensation"
             ],
-            "important": [
-                "meeting", "deadline", "urgent", "asap", "critical", "approval needed",
-                "action required", "invoice", "contract", "review", "decision required"
+            "finance": [
+                "invoice", "budget", "expense", "reimbursement", "audit", "tax",
+                "revenue", "p&l", "fiscal", "billing", "accounts payable", "payment",
+                "statement", "treasury", "bank", "capital expenditure", "financial",
+                "receipt", "wire transfer", "quarterly report", "depreciation"
             ],
-            "promotion": [
-                "sale", "discount", "% off", "coupon", "deal", "free shipping",
-                "limited offer", "shop now", "buy now", "exclusive", "save"
+            "marketing": [
+                "campaign", "social media", "brand", "seo", "content calendar",
+                "lead generation", "marketing", "webinar", "newsletter", "persona",
+                "press release", "market research", "ad spend", "analytics",
+                "brochure", "promotion", "influencer", "email blast"
             ],
-            "social": [
-                "invitation", "party", "birthday", "wedding", "friend", "event",
-                "photos", "tagged", "meetup", "hangout", "celebration"
+            "sales": [
+                "lead", "pipeline", "closed deal", "sales forecast", "prospect",
+                "demo", "quota", "partnership", "commission", "outreach",
+                "acquisition", "closing", "inbound", "proposal", "rfp",
+                "pricing", "contract", "renewal", "upsell"
             ],
-            "work": [
-                "project", "client", "report", "status", "team", "office",
-                "business", "quarterly", "performance", "update"
-            ],
-            "general": [
-                "newsletter", "subscription", "unsubscribe", "notification",
-                "update", "account", "welcome", "confirmation"
+            "support": [
+                "login issue", "bug report", "password reset", "ticket",
+                "troubleshooting", "not working", "error code", "broken",
+                "customer support", "knowledge base", "resolved", "feature request",
+                "how to", "cancel subscription", "refund", "help desk"
             ]
         }
         
-        logger.info("Initializing DistilBERT classifier...")
+        logger.info("Initializing DistilBERT classifier for company departments...")
         self._load_model()
     
     def _load_model(self):
         """Load DistilBERT model for zero-shot classification"""
         try:
-            # Primary: DistilBERT trained on MNLI (best for zero-shot)
             self.classifier = pipeline(
                 "zero-shot-classification",
                 model="typeform/distilbert-base-uncased-mnli",
                 device=0 if self.device == "cuda" else -1
             )
             logger.info("✅ DistilBERT MNLI loaded successfully")
-            
         except Exception as e:
             logger.warning(f"Failed to load primary model: {e}")
             try:
-                # Fallback: Standard DistilBERT
                 self.classifier = pipeline(
                     "zero-shot-classification",
                     model="valhalla/distilbart-mnli-12-3",
@@ -104,7 +97,6 @@ class DistilBERTEmailClassifier:
         """Combine and clean email text"""
         subject = (subject or "").strip()
         body = (body or "").strip()
-        
         # DistilBERT max tokens: 512 (~2000 chars)
         combined = f"{subject} {body}"[:2000]
         return combined
@@ -113,11 +105,9 @@ class DistilBERTEmailClassifier:
         """Find matching keywords in text"""
         text_lower = text.lower()
         found = {}
-        
-        for category, keywords in self.keywords.items():
-            matches = [kw for kw in keywords if kw.lower() in text_lower]
+        for category, kw_list in self.keywords.items():
+            matches = [kw for kw in kw_list if kw.lower() in text_lower]
             found[category] = matches
-            
         return found
     
     def _calculate_boosts(self, found_keywords: Dict[str, List[str]]) -> Dict[str, float]:
@@ -128,22 +118,17 @@ class DistilBERTEmailClassifier:
         for category in self.categories:
             count = len(found_keywords.get(category, []))
             if count > 0:
-                boosts[category] = min(count * 0.15, 0.5)  # Up to 50% boost
+                boosts[category] = min(count * 0.2, 0.6)  # Stronger keyword boosting
             elif max_found > 0:
-                boosts[category] = -0.1  # Slight penalty
+                boosts[category] = -0.15  # Stronger penalty for non-matching
             else:
                 boosts[category] = 0.0
-                
         return boosts
     
     def classify(self, subject: str, body: str) -> Dict:
         """
-        Classify email using DistilBERT
+        Classify email into a company department using DistilBERT.
         
-        Args:
-            subject: Email subject line
-            body: Email body content
-            
         Returns:
             Dict with category, confidence, probabilities, explanation
         """
@@ -154,34 +139,39 @@ class DistilBERTEmailClassifier:
         
         if not text.strip():
             return {
-                "category": "general",
+                "category": "support",
                 "confidence": 0.0,
                 "probabilities": {c: 0.0 for c in self.categories},
                 "explanation": "Empty email content"
             }
         
-        # Extract keywords
+        # Extract keywords for boosting
         found_keywords = self._extract_keywords(text)
         boosts = self._calculate_boosts(found_keywords)
         
         try:
-            # Zero-shot classification
+            # Use descriptive labels for better accuracy
+            label_list = list(self.category_labels.values())
+            category_keys = list(self.category_labels.keys())
+            
             result = self.classifier(
                 text,
-                candidate_labels=self.categories,
+                candidate_labels=label_list,
                 multi_label=False
             )
             
-            # Build probabilities with boosts
+            # Map descriptive labels back to category keys
             probabilities = {}
             for label, score in zip(result['labels'], result['scores']):
-                boost = boosts.get(label, 0)
-                probabilities[label] = min(max(score + boost, 0), 1.0)
+                idx = label_list.index(label)
+                cat_key = category_keys[idx]
+                boost = boosts.get(cat_key, 0)
+                probabilities[cat_key] = min(max(score + boost, 0), 1.0)
             
             # Normalize
             total = sum(probabilities.values())
             if total > 0:
-                probabilities = {k: v/total for k, v in probabilities.items()}
+                probabilities = {k: v / total for k, v in probabilities.items()}
             
             # Get top prediction
             category = max(probabilities, key=probabilities.get)
@@ -191,21 +181,21 @@ class DistilBERTEmailClassifier:
             keywords_found = found_keywords.get(category, [])
             if keywords_found:
                 kw_str = ", ".join(keywords_found[:3])
-                explanation = f"Classified as {category.title()} ({confidence:.0%}). Keywords: {kw_str}"
+                explanation = f"Classified as {category.upper()} ({confidence:.0%}). Keywords: {kw_str}"
             else:
-                explanation = f"Classified as {category.title()} ({confidence:.0%}) via semantic analysis"
+                explanation = f"Classified as {category.upper()} ({confidence:.0%}) via semantic analysis"
             
             return {
                 "category": category,
                 "confidence": confidence,
-                "probabilities": {k: v * 100 for k, v in probabilities.items()},
+                "probabilities": {k: round(v * 100, 2) for k, v in probabilities.items()},
                 "explanation": explanation
             }
             
         except Exception as e:
             logger.error(f"Classification error: {e}")
             return {
-                "category": "general",
+                "category": "support",
                 "confidence": 0.0,
                 "probabilities": {c: 0.0 for c in self.categories},
                 "explanation": f"Error: {str(e)}"

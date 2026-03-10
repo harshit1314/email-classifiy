@@ -27,11 +27,12 @@ const AnalyticsPage = () => {
     const fetchAnalytics = async () => {
         setLoading(true)
         try {
+            const _cb = new Date().getTime()
             const [timeSeriesRes, categorySeriesRes, heatmapRes, trendsRes] = await Promise.all([
-                axios.get(`${API_URL}/api/analytics/timeseries?days=30`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${API_URL}/api/analytics/category-timeseries?days=30`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${API_URL}/api/analytics/heatmap?days=30`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${API_URL}/api/analytics/trends`, { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${API_URL}/api/analytics/timeseries?days=30&_t=${_cb}`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${API_URL}/api/analytics/category-timeseries?days=30&_t=${_cb}`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${API_URL}/api/analytics/heatmap?days=30&_t=${_cb}`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${API_URL}/api/analytics/trends?_t=${_cb}`, { headers: { Authorization: `Bearer ${token}` } })
             ])
 
             setTimeSeries(timeSeriesRes.data.data || [])

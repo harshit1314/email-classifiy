@@ -11,26 +11,10 @@ import hashlib
 import os
 import joblib
 
-# Try to load improved classifier first, fallback to basic
-try:
-    # Check if trained model exists
-    model_path = os.path.join(os.path.dirname(__file__), '..', 'ml', 'improved_classifier_model.joblib')
-    if os.path.exists(model_path):
-        # Load the trained sklearn pipeline
-        trained_classifier = joblib.load(model_path)
-        USE_TRAINED_MODEL = True
-        logger = logging.getLogger(__name__)
-        logger.info(f"✅ Loaded trained model from {model_path}")
-    else:
-        from app.ml.improved_classifier import ImprovedEmailClassifier
-        USE_TRAINED_MODEL = False
-        logger = logging.getLogger(__name__)
-        logger.info("⚠️ Trained model not found, using ImprovedEmailClassifier")
-except Exception as e:
-    from app.ml.classifier import EmailClassifier
-    USE_TRAINED_MODEL = False
-    logger = logging.getLogger(__name__)
-    logger.warning(f"⚠️ Could not load improved classifier: {e}, using basic EmailClassifier")
+# Use DistilBERT classifier for department classification
+from app.ml.distilbert_classifier import DistilBERTEmailClassifier
+logger = logging.getLogger(__name__)
+logger.info("✅ Using DistilBERT classifier for department classification")
 
 from app.database.logger import DatabaseLogger
 
@@ -56,28 +40,27 @@ class ProcessingService:
         Args:
             action_service: Action service for routing
             db_logger: Database logger
-            use_llm: DEPRECATED - LLM is disabled, using trained model
+            use_llm: DEPRECATED - not used
             llm_api_key: DEPRECATED - not used
         """
-        # Use trained model if available, otherwise fallback
-        if USE_TRAINED_MODEL:
-            self.classifier = trained_classifier
-            self.is_sklearn_pipeline = True
-            logger.info("✅ Using trained sklearn pipeline model")
-        else:
-            from app.ml.improved_classifier import ImprovedEmailClassifier
-            try:
-                self.classifier = ImprovedEmailClassifier()
-                self.is_sklearn_pipeline = False
-                logger.info("✅ Using ImprovedEmailClassifier")
-            except:
-                from app.ml.classifier import EmailClassifier
-                self.classifier = EmailClassifier(use_bert=True, use_llm=False)
-                self.is_sklearn_pipeline = False
-                logger.info("⚠️ Using basic EmailClassifier")
-                
+        # Initialize DistilBERT classifier
+        try:
+            self.classifier = DistilBERTEmailClassifier()
+            self.is_sklearn_pipeline = False
+            self.classifier_requires_sender = False
+            logger.info("✅ DistilBERT classifier initialized for department classification")
+        except Exception as e:
+            logger.error(f"Failed to load DistilBERT: {e}")
+            # Fallback to improved classifier
+            from app.ml.improved_classifier import get_improved_classifier
+            self.classifier = get_improved_classifier()
+            self.is_sklearn_pipeline = False
+            self.classifier_requires_sender = False
+            logger.warning("⚠️ Fell back to keyword-based classifier")
+        
         self.action_service = action_service
-        self.db_logger = db_logger or DatabaseLogger()
+        # Allow db_logger to be optional; if None, skip DB logging
+        self.db_logger = db_logger
         self._classification_cache = {}  # In-memory cache for classifications
         self._cache_max_size = 1000  # Maximum cache entries
         
@@ -136,7 +119,10 @@ class ProcessingService:
             logger.info(f"Classification: {predicted_category} (confidence: {confidence:.2f})")
         else:
             # For custom classifier with classify method
-            classification_result = self.classifier.classify(subject, body, sender)
+            if getattr(self, "classifier_requires_sender", True):
+                classification_result = self.classifier.classify(subject, body, sender)
+            else:
+                classification_result = self.classifier.classify(subject, body)
         
         # Route to department based on category
         department = None
@@ -165,7 +151,7 @@ class ProcessingService:
         
         # Log the result to database with department
         # Only log here if IT WASN'T logged by IngestionService already
-        if not hasattr(self, '_current_db_id'):
+        if self.db_logger and not hasattr(self, '_current_db_id'):
             log_entry = {
                 "email_subject": subject,
                 "email_sender": sender or "unknown",
@@ -180,7 +166,7 @@ class ProcessingService:
             }
             await self.db_logger.log_classification(log_entry)
         else:
-            logger.info("Skipping redundant logging in ProcessingService (handled by IngestionService)")
+            logger.info("Skipping DB logging (no db_logger provided or already logged)")
         
         # Send classified decision to action service
         if self.action_service:
