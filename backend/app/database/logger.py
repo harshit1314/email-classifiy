@@ -384,7 +384,7 @@ class DatabaseLogger:
             conn.close()
     
     def add_feedback(self, user_id: int, classification_id: int, original_category: str, 
-                     corrected_category: str, feedback_type: str = "correction", notes: Optional[str] = None) -> int:
+                     corrected_category: str, feedback_type: str = "correction", notes: Optional[str] = None, new_department: Optional[str] = None) -> int:
         """Add user feedback for a classification"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -400,11 +400,18 @@ class DatabaseLogger:
         # Update the classification with correction - preserve original category for performance tracking.
         # user_corrected_category stores what the user said it SHOULD be.
         # category stays as the original ML prediction so performance_service can compare the two.
-        cursor.execute('''
-            UPDATE classifications 
-            SET user_corrected_category = ?, needs_review = 0
-            WHERE id = ?
-        ''', (corrected_category, classification_id))
+        if new_department:
+            cursor.execute('''
+                UPDATE classifications 
+                SET user_corrected_category = ?, needs_review = 0, department = ?
+                WHERE id = ?
+            ''', (corrected_category, new_department, classification_id))
+        else:
+            cursor.execute('''
+                UPDATE classifications 
+                SET user_corrected_category = ?, needs_review = 0
+                WHERE id = ?
+            ''', (corrected_category, classification_id))
         
         conn.commit()
         conn.close()
@@ -451,13 +458,25 @@ class DatabaseLogger:
         cursor.execute('SELECT COUNT(*) FROM classifications')
         total = cursor.fetchone()[0]
         
-        # By category
+        # By category (using original category for consistency with training)
         cursor.execute('''
             SELECT category, COUNT(*) as count
             FROM classifications
             GROUP BY category
         ''')
         category_counts = {row[0]: row[1] for row in cursor.fetchall()}
+        
+        # By department (using the actual department column which handles manual routing overrides)
+        # Exclude 'pending' emails so total routed matches classified count
+        cursor.execute('''
+            SELECT department, COUNT(*) as count
+            FROM classifications
+            WHERE department IS NOT NULL AND department != '' 
+            AND processing_status = 'processed'
+            AND category NOT IN ('pending', 'unknown', 'unclassified', '')
+            GROUP BY department
+        ''')
+        department_counts = {row[0]: row[1] for row in cursor.fetchall()}
         
         # Average confidence
         cursor.execute('SELECT AVG(confidence) FROM classifications')
@@ -475,6 +494,7 @@ class DatabaseLogger:
         return {
             "total_classifications": total,
             "category_distribution": category_counts,
+            "department_distribution": department_counts,
             "average_confidence": float(avg_confidence),
             "recent_activity_24h": recent_count
         }

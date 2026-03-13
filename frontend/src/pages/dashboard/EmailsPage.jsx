@@ -232,7 +232,19 @@ const EmailsPage = () => {
             )
 
             // Refresh data from server to ensure consistency
-            await fetchData()
+            const [classRes] = await Promise.all([
+                axios.get(`${API_URL}/api/dashboard/classifications?limit=1000`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetchData() // Still call main fetchData for stats and other UI elements
+            ])
+
+            const freshClassifications = classRes.data.classifications || []
+            const updatedEmail = freshClassifications.find(e => e.id === emailId)
+            
+            if (updatedEmail) {
+                // Manually add the display_category logic like the backend does if needed, 
+                // but the backend already provides display_category now.
+                setSelectedEmail(updatedEmail)
+            }
 
             toast({
                 title: "Category Updated",

@@ -112,16 +112,24 @@ async def lifespan(app: FastAPI):
     global priority_detector, entity_extractor, performance_service, model_comparison_service
     
     # Initialize services (following the architecture)
-    # Using BERT/TF-IDF only - LLM/OpenAI disabled
     db_logger = DatabaseLogger()
-    action_service = ActionService()
+    
+    # Initialize email poller first to get access to servers
+    ingestion_service_placeholder = IngestionService()
+    email_poller = EmailPoller(ingestion_service=ingestion_service_placeholder)
+    
+    # Pass gmail server to action service for real-time labeling
+    action_service = ActionService(email_server=email_poller.gmail_server)
+    
     processing_service = ProcessingService(
         action_service=action_service, 
         db_logger=db_logger,
         use_llm=False  # Disabled - using BERT/TF-IDF only
     )
+    
+    # Connect ingestion service to processing service
     ingestion_service = IngestionService(processing_service=processing_service)
-    email_poller = EmailPoller(ingestion_service=ingestion_service)
+    email_poller.ingestion_service = ingestion_service
 
     # Initialize new services
     auth_service = AuthService()
@@ -689,17 +697,42 @@ async def get_analytics_by_department():
         # Get statistics from database
         stats = processing_service.get_statistics()
         
-        # Get category counts from stats — exclude unclassified entries (pending/unknown/empty)
-        # so the total matches the classified count shown on the dashboard
-        EXCLUDED_CATEGORIES = {'pending', 'unknown', 'unclassified', ''}
-        category_counts = {
-            cat: count
-            for cat, count in stats.get("category_distribution", {}).items()
-            if cat and cat.lower() not in EXCLUDED_CATEGORIES
-        }
-        
-        # Map to departments
-        department_summary = department_routing_service.get_emails_by_department_summary(category_counts)
+        # If we have direct department distribution, use it!
+        # This is more accurate as it accounts for manual routing overrides
+        if "department_distribution" in stats:
+            dept_counts = stats["department_distribution"]
+            
+            # Map internal keys to display info
+            department_summary = {}
+            for dept_key, count in dept_counts.items():
+                if not dept_key or dept_key.lower() == 'pending':
+                    continue
+                    
+                dept_info = department_routing_service.departments.get(dept_key)
+                if not dept_info:
+                    # Fallback for departments not in the main config
+                    department_summary[dept_key] = {
+                        "total": count,
+                        "categories": {}, 
+                        "name": dept_key,
+                        "description": "Department",
+                        "email": f"{dept_key.lower()}@company.com"
+                    }
+                else:
+                    department_summary[dept_key] = {
+                        "total": count,
+                        "categories": {},
+                        **dept_info
+                    }
+        else:
+            # Fallback to category-based mapping (Legacy behavior)
+            EXCLUDED_CATEGORIES = {'pending', 'unknown', 'unclassified', ''}
+            category_counts = {
+                cat: count
+                for cat, count in stats.get("category_distribution", {}).items()
+                if cat and cat.lower() not in EXCLUDED_CATEGORIES
+            }
+            department_summary = department_routing_service.get_emails_by_department_summary(category_counts)
         
         return {
             "department_statistics": department_summary,
@@ -1517,22 +1550,51 @@ async def submit_feedback(
     """Submit feedback to correct a classification"""
     try:
         # Get original classification
-        classifications = db_logger.get_classifications(limit=1000, user_id=current_user.id)
-        classification = next((c for c in classifications if c.get('id') == classification_id), None)
+        classification = db_logger.get_classification_by_id(classification_id)
         
         if not classification:
+            logger.warning(f"Classification not found for ID: {classification_id}")
             raise HTTPException(status_code=404, detail="Classification not found")
         
         original_category = classification.get('category', '')
+        
+        new_department = None
+        if department_routing_service:
+            new_department = department_routing_service.get_department_for_category(corrected_category)
+            logger.info(f"Feedback correction: {original_category} -> {corrected_category}. Mapping to department: {new_department}")
+        else:
+            logger.warning("department_routing_service not initialized")
+            
         feedback_id = db_logger.add_feedback(
             current_user.id,
             classification_id,
             original_category,
             corrected_category,
-            notes=notes
+            notes=notes,
+            new_department=new_department
         )
         
-        return {"feedback_id": feedback_id, "message": "Feedback submitted successfully"}
+        # 3. Apply label in Gmail if email_id is present
+        # In ActionService.tag_email mainly needs email_id and tag
+        gmail_message_id = classification.get('email_id')
+        if gmail_message_id and action_service:
+            try:
+                logger.info(f"Syncing manual correction to Gmail for email: {gmail_message_id}")
+                await action_service.tag_email(
+                    category=corrected_category,
+                    tag=corrected_category,
+                    subject=classification.get('email_subject', ''),
+                    sender=classification.get('email_sender', ''),
+                    email_id=gmail_message_id
+                )
+            except Exception as e:
+                logger.warning(f"Failed to sync label to Gmail: {e}")
+        
+        # Verify update
+        updated = db_logger.get_classification_by_id(classification_id)
+        logger.info(f"Update verified - New department in DB: {updated.get('department')}")
+        
+        return {"feedback_id": feedback_id, "message": "Feedback submitted successfully", "new_department": new_department}
     except HTTPException:
         raise
     except Exception as e:
