@@ -16,13 +16,15 @@ ENTERPRISE_ROUTING_AVAILABLE = False
 class ActionService:
     """Service for handling actions based on email classification"""
     
-    def __init__(self, use_advanced_rules: bool = True):
+    def __init__(self, use_advanced_rules: bool = True, email_server=None):
         """
         Initialize Action Service
         
         Args:
             use_advanced_rules: If True, use advanced rule engine for deep classification
+            email_server: Email server interface for routing/tagging
         """
+        self.email_server = email_server
         self.action_rules = {
             "spam": {"route": "spam", "tag": "spam", "priority": "low"},
             "important": {"route": "inbox", "tag": "important", "priority": "high"},
@@ -134,11 +136,11 @@ class ActionService:
             })
             
             # Route email
-            route_action = await self.route_email(category, action["route"], subject, sender)
+            route_action = await self.route_email(category, action["route"], subject, sender, email_id)
             result["actions_taken"].append(route_action)
             
             # Tag email
-            tag_action = await self.tag_email(category, action["tag"], subject, sender)
+            tag_action = await self.tag_email(category, action["tag"], subject, sender, email_id)
             result["actions_taken"].append(tag_action)
             
             # Additional actions based on category
@@ -158,20 +160,38 @@ class ActionService:
         
         return result
     
-    async def route_email(self, category: str, route: str, subject: str, sender: Optional[str] = None) -> Dict:
+    async def route_email(self, category: str, route: str, subject: str, sender: Optional[str] = None, email_id: Optional[str] = None) -> Dict:
         """Route email to appropriate folder/category"""
         logger.info(f"Routing email to: {route}")
-        # In production, this would interact with email server API
+        
+        # In production, this interacts with email server API
+        if self.email_server and email_id:
+            success = await self.email_server.route_email(email_id, route)
+            return {
+                "action": "route",
+                "destination": route,
+                "status": "completed" if success else "failed"
+            }
+            
         return {
             "action": "route",
             "destination": route,
             "status": "completed"
         }
     
-    async def tag_email(self, category: str, tag: str, subject: str, sender: Optional[str] = None) -> Dict:
+    async def tag_email(self, category: str, tag: str, subject: str, sender: Optional[str] = None, email_id: Optional[str] = None) -> Dict:
         """Tag email with appropriate label"""
         logger.info(f"Tagging email as: {tag}")
-        # In production, this would interact with email server API
+        
+        # In production, this interacts with email server API
+        if self.email_server and email_id:
+            success = await self.email_server.tag_email(email_id, tag)
+            return {
+                "action": "tag",
+                "tag": tag,
+                "status": "completed" if success else "failed"
+            }
+            
         return {
             "action": "tag",
             "tag": tag,

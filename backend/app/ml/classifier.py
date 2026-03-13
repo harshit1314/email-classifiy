@@ -210,7 +210,6 @@ class EmailClassifier:
         # Save the model
         os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
         joblib.dump(self.model, self.model_path)
-        print("Model trained and saved successfully")
     
     def _map_bert_categories(self, result: Dict) -> Dict:
         """Map BERT categories (spam, important, etc.) to enterprise categories"""

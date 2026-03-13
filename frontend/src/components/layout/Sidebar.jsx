@@ -11,7 +11,10 @@ import {
     Inbox,
     Sparkles,
     ChevronRight,
-    User
+    User,
+    Building2,
+    BarChart3,
+    TrendingUp
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
@@ -26,6 +29,9 @@ const Sidebar = () => {
         { icon: Mail, label: 'Emails', to: '/emails', color: 'from-purple-500 to-pink-500' },
         { icon: Inbox, label: 'Live Ingestions', to: '/live-ingestions', color: 'from-green-500 to-emerald-500' },
         { icon: Calendar, label: 'Calendar', to: '/calendar', color: 'from-orange-500 to-red-500' },
+        { icon: Building2, label: 'Departments', to: '/departments', color: 'from-teal-500 to-cyan-500' },
+        { icon: BarChart3, label: 'Performance', to: '/performance', color: 'from-violet-500 to-purple-500' },
+        { icon: TrendingUp, label: 'Analytics', to: '/analytics', color: 'from-pink-500 to-rose-500' },
         { icon: Settings, label: 'Settings', to: '/settings', color: 'from-gray-500 to-slate-500' },
         { icon: ShieldAlert, label: 'Connect', to: '/connect', color: 'from-indigo-500 to-violet-500' },
     ]

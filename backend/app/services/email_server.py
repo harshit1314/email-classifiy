@@ -310,23 +310,59 @@ class GmailServer(EmailServerInterface):
             logger.error(f"Error fetching Gmail emails: {e}")
             return []
     
+    def _get_or_create_label_id(self, label_name: str) -> Optional[str]:
+        """Get or create Gmail label by name and return its ID"""
+        if not self.connected or not self.service:
+            return None
+            
+        try:
+            # List all labels
+            results = self.service.users().labels().list(userId='me').execute()
+            labels = results.get('labels', [])
+            
+            # Look for existing label (case-insensitive)
+            for label in labels:
+                if label['name'].lower() == label_name.lower():
+                    return label['id']
+            
+            # Create new label if not found
+            logger.info(f"Creating new Gmail label: {label_name}")
+            label_body = {
+                'name': label_name,
+                'labelListVisibility': 'labelShow',
+                'messageListVisibility': 'show'
+            }
+            created_label = self.service.users().labels().create(
+                userId='me',
+                body=label_body
+            ).execute()
+            
+            return created_label['id']
+        except Exception as e:
+            logger.error(f"Error getting/creating Gmail label '{label_name}': {e}")
+            return None
+
     async def route_email(self, email_id: str, destination: str) -> bool:
         """Route email in Gmail (move to label/folder)"""
         if not self.connected or not self.service:
             return False
         
         try:
-            # Gmail uses labels instead of folders
-            # For routing, we add/remove labels
-            labels_to_add = [destination] if destination else []
+            # Resolve destination name to label ID
+            label_id = self._get_or_create_label_id(destination)
+            if not label_id:
+                logger.warning(f"Could not resolve label ID for destination: {destination}")
+                return False
             
+            # Gmail uses labels instead of folders
+            # For routing, we add labels
             self.service.users().messages().modify(
                 userId='me',
                 id=email_id,
-                body={'addLabelIds': labels_to_add}
+                body={'addLabelIds': [label_id]}
             ).execute()
             
-            logger.info(f"Routed Gmail email {email_id} to {destination}")
+            logger.info(f"Routed Gmail email {email_id} to {destination} (ID: {label_id})")
             return True
         except Exception as e:
             logger.error(f"Error routing Gmail email: {e}")

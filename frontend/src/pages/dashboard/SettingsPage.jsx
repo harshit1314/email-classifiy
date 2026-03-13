@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2, Save, FileText, BrainCircuit, Bot, Settings as SettingsIcon, User, Bell, Shield, Sparkles, Download, TrendingUp } from 'lucide-react'
+import { Loader2, Save, FileText, BrainCircuit, Bot, Settings as SettingsIcon, User, Bell, Shield, Sparkles, Download, TrendingUp, Key, Filter, Plus, X, BarChart3, Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from "@/components/ui/use-toast"
 
@@ -91,6 +91,24 @@ const SettingsPage = () => {
         autoReply: false
     })
     const [savingProfile, setSavingProfile] = useState(false)
+
+    // Password Change State
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    })
+    const [changingPassword, setChangingPassword] = useState(false)
+
+    // Email Filters State
+    const [ignoredSenders, setIgnoredSenders] = useState([])
+    const [ignoredSubjects, setIgnoredSubjects] = useState([])
+    const [newSender, setNewSender] = useState('')
+    const [newSubject, setNewSubject] = useState('')
+    const [loadingFilters, setLoadingFilters] = useState(false)
+
+    // Statistics State
+    const [stats, setStats] = useState(null)
 
     useEffect(() => {
         if (user) {
@@ -222,6 +240,124 @@ const SettingsPage = () => {
         }
     }
 
+    const handleChangePassword = async (e) => {
+        e.preventDefault()
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            toast({
+                variant: "destructive",
+                title: "Password Mismatch",
+                description: "New password and confirmation do not match"
+            })
+            return
+        }
+        setChangingPassword(true)
+        try {
+            await axios.post(`${API_URL}/api/auth/change-password`, {
+                current_password: passwordData.currentPassword,
+                new_password: passwordData.newPassword
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            toast({
+                title: "Password Changed",
+                description: "Your password has been updated successfully",
+            })
+            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Failed to Change Password",
+                description: formatErrorMessage(err.response?.data?.detail || err.response?.data || "Could not change password")
+            })
+        } finally {
+            setChangingPassword(false)
+        }
+    }
+
+    const handleAddSender = async () => {
+        if (!newSender.trim()) return
+        try {
+            await axios.post(`${API_URL}/api/filters/ignored-senders`, {
+                sender: newSender
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            setIgnoredSenders([...ignoredSenders, newSender])
+            setNewSender('')
+            toast({
+                title: "Sender Added",
+                description: `${newSender} will be ignored`,
+            })
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Failed to Add Sender",
+                description: formatErrorMessage(err.response?.data?.detail || err.message)
+            })
+        }
+    }
+
+    const handleRemoveSender = async (sender) => {
+        try {
+            await axios.delete(`${API_URL}/api/filters/ignored-senders/${encodeURIComponent(sender)}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            setIgnoredSenders(ignoredSenders.filter(s => s !== sender))
+            toast({
+                title: "Sender Removed",
+                description: `${sender} is no longer ignored`,
+            })
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Failed to Remove Sender",
+                description: formatErrorMessage(err.response?.data?.detail || err.message)
+            })
+        }
+    }
+
+    const handleAddSubject = async () => {
+        if (!newSubject.trim()) return
+        try {
+            await axios.post(`${API_URL}/api/filters/ignored-subjects`, {
+                subject: newSubject
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            setIgnoredSubjects([...ignoredSubjects, newSubject])
+            setNewSubject('')
+            toast({
+                title: "Subject Added",
+                description: `Emails with "${newSubject}" will be ignored`,
+            })
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Failed to Add Subject",
+                description: formatErrorMessage(err.response?.data?.detail || err.message)
+            })
+        }
+    }
+
+    const handleRemoveSubject = async (subject) => {
+        try {
+            await axios.delete(`${API_URL}/api/filters/ignored-subjects/${encodeURIComponent(subject)}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            setIgnoredSubjects(ignoredSubjects.filter(s => s !== subject))
+            toast({
+                title: "Subject Removed",
+                description: `"${subject}" is no longer ignored`,
+            })
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Failed to Remove Subject",
+                description: formatErrorMessage(err.response?.data?.detail || err.message)
+            })
+        }
+    }
+
     return (
         <div className="flex-1 flex flex-col h-screen bg-transparent">
             <div className="flex-1 overflow-y-auto">
@@ -242,6 +378,10 @@ const SettingsPage = () => {
                             <SimpleTabsTrigger value="templates">
                                 <Bot className="mr-2 h-4 w-4 inline" />
                                 Templates
+                            </SimpleTabsTrigger>
+                            <SimpleTabsTrigger value="filters">
+                                <Filter className="mr-2 h-4 w-4 inline" />
+                                Email Filters
                             </SimpleTabsTrigger>
                             <SimpleTabsTrigger value="model">
                                 <BrainCircuit className="mr-2 h-4 w-4 inline" />
@@ -286,7 +426,7 @@ const SettingsPage = () => {
                                             />
                                             <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                                         </div>
-                                        
+
                                         <div className="space-y-4 pt-4 border-t">
                                             <h4 className="font-semibold flex items-center gap-2">
                                                 <Bell className="h-4 w-4" />
@@ -336,8 +476,64 @@ const SettingsPage = () => {
                                             </div>
                                         </div>
 
-                                        <Button 
-                                            type="submit" 
+                                        <div className="space-y-4 pt-6 border-t">
+                                            <h4 className="font-semibold flex items-center gap-2">
+                                                <Key className="h-4 w-4" />
+                                                Change Password
+                                            </h4>
+                                            <div className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-semibold">Current Password</Label>
+                                                    <Input
+                                                        type="password"
+                                                        placeholder="Enter current password"
+                                                        value={passwordData.currentPassword}
+                                                        onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                                        className="h-11"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-semibold">New Password</Label>
+                                                    <Input
+                                                        type="password"
+                                                        placeholder="Enter new password"
+                                                        value={passwordData.newPassword}
+                                                        onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                                        className="h-11"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-semibold">Confirm New Password</Label>
+                                                    <Input
+                                                        type="password"
+                                                        placeholder="Confirm new password"
+                                                        value={passwordData.confirmPassword}
+                                                        onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                                        className="h-11"
+                                                    />
+                                                </div>
+                                                <Button
+                                                    onClick={handleChangePassword}
+                                                    disabled={changingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                                                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+                                                >
+                                                    {changingPassword ? (
+                                                        <>
+                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                            Changing Password...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Key className="mr-2 h-4 w-4" />
+                                                            Change Password
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        <Button
+                                            type="submit"
                                             disabled={savingProfile}
                                             className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                                         >
@@ -404,8 +600,8 @@ const SettingsPage = () => {
                                             />
                                             <p className="text-xs text-muted-foreground">Use placeholders like {'{name}'} and {'{email}'}</p>
                                         </div>
-                                        <Button 
-                                            type="submit" 
+                                        <Button
+                                            type="submit"
                                             disabled={templateSubmitting}
                                             className="w-full h-11 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                                         >
@@ -422,6 +618,122 @@ const SettingsPage = () => {
                                             )}
                                         </Button>
                                     </form>
+                                </CardContent>
+                            </Card>
+                        </SimpleTabsContent>
+
+                        {/* Email Filters Tab */}
+                        <SimpleTabsContent value="filters">
+                            <Card className="border-0 shadow-lg bg-white/90 backdrop-blur">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-2xl">
+                                        <div className="rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 p-2">
+                                            <Filter className="h-5 w-5 text-white" />
+                                        </div>
+                                        Email Filters
+                                    </CardTitle>
+                                    <CardDescription>Manage ignored senders and subject patterns</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-8">
+                                    {/* Ignored Senders Section */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="font-semibold flex items-center gap-2">
+                                                <Mail className="h-4 w-4" />
+                                                Ignored Senders
+                                            </h4>
+                                            <span className="text-sm text-muted-foreground">{ignoredSenders.length} sender(s)</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder="Enter email address to ignore"
+                                                value={newSender}
+                                                onChange={e => setNewSender(e.target.value)}
+                                                onKeyPress={e => e.key === 'Enter' && handleAddSender()}
+                                                className="h-11"
+                                            />
+                                            <Button
+                                                onClick={handleAddSender}
+                                                disabled={!newSender.trim()}
+                                                className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700"
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                                            {ignoredSenders.length === 0 ? (
+                                                <div className="text-center py-8 text-muted-foreground">
+                                                    <Filter className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                                                    <p className="text-sm">No ignored senders yet</p>
+                                                </div>
+                                            ) : (
+                                                ignoredSenders.map((sender, idx) => (
+                                                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-teal-50 border border-teal-100">
+                                                        <span className="text-sm font-medium">{sender}</span>
+                                                        <button
+                                                            onClick={() => handleRemoveSender(sender)}
+                                                            className="text-red-600 hover:text-red-700 hover:bg-red-100 p-1 rounded"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Ignored Subjects Section */}
+                                    <div className="space-y-4 pt-6 border-t">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="font-semibold flex items-center gap-2">
+                                                <FileText className="h-4 w-4" />
+                                                Ignored Subject Patterns
+                                            </h4>
+                                            <span className="text-sm text-muted-foreground">{ignoredSubjects.length} pattern(s)</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder="Enter subject pattern to ignore"
+                                                value={newSubject}
+                                                onChange={e => setNewSubject(e.target.value)}
+                                                onKeyPress={e => e.key === 'Enter' && handleAddSubject()}
+                                                className="h-11"
+                                            />
+                                            <Button
+                                                onClick={handleAddSubject}
+                                                disabled={!newSubject.trim()}
+                                                className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700"
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                                            {ignoredSubjects.length === 0 ? (
+                                                <div className="text-center py-8 text-muted-foreground">
+                                                    <FileText className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                                                    <p className="text-sm">No ignored subject patterns yet</p>
+                                                </div>
+                                            ) : (
+                                                ignoredSubjects.map((subject, idx) => (
+                                                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-cyan-50 border border-cyan-100">
+                                                        <span className="text-sm font-medium">{subject}</span>
+                                                        <button
+                                                            onClick={() => handleRemoveSubject(subject)}
+                                                            className="text-red-600 hover:text-red-700 hover:bg-red-100 p-1 rounded"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-xl bg-blue-50 border border-blue-200 p-4">
+                                        <p className="text-sm text-blue-900">
+                                            <strong>Tip:</strong> Emails from ignored senders or with ignored subject patterns will be automatically filtered out during classification.
+                                        </p>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </SimpleTabsContent>
@@ -473,8 +785,8 @@ const SettingsPage = () => {
                                         </p>
                                     </div>
 
-                                    <Button 
-                                        onClick={handleRetrain} 
+                                    <Button
+                                        onClick={handleRetrain}
                                         disabled={retraining}
                                         className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-lg"
                                     >
@@ -524,8 +836,8 @@ const SettingsPage = () => {
                                                         <li>• Classification accuracy metrics</li>
                                                         <li>• Text format (.txt)</li>
                                                     </ul>
-                                                    <Button 
-                                                        onClick={handleGenerateReport} 
+                                                    <Button
+                                                        onClick={handleGenerateReport}
                                                         disabled={generatingReport}
                                                         className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
                                                     >

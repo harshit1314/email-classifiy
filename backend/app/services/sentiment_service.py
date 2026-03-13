@@ -53,7 +53,7 @@ class SentimentAnalyzer:
         "looking forward", "happy to help", "exceeded expectations", "highly recommend"
     ]
     
-    def __init__(self, use_transformers: bool = True):
+    def __init__(self, use_transformers: bool = False):
         self.use_transformers = use_transformers
         self.transformer_model = None
         
@@ -223,5 +223,5 @@ class SentimentService(SentimentAnalyzer):
 
 def analyze_sentiment(subject: str, body: str) -> Dict:
     """Analyze email sentiment"""
-    analyzer = SentimentAnalyzer(use_transformers=True)
+    analyzer = SentimentAnalyzer(use_transformers=False)
     return analyzer.analyze_sentiment(subject, body)
