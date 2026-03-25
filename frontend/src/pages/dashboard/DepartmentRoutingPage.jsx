@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useAuth } from '@/context/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Building2, Mail, Users, TrendingUp, Edit2, Check, X } from 'lucide-react'
+import { RefreshCw, Building2, Mail, Users, TrendingUp, Edit2, Check, X, Send } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
@@ -15,6 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Input } from '@/components/ui/input'
 
 const DepartmentRoutingPage = () => {
     const { API_URL, token } = useAuth()
@@ -26,6 +27,8 @@ const DepartmentRoutingPage = () => {
     const [categoryMappings, setCategoryMappings] = useState({})
     const [editingCategory, setEditingCategory] = useState(null)
     const [selectedDepartment, setSelectedDepartment] = useState('')
+    const [editingEmail, setEditingEmail] = useState(null)
+    const [emailInput, setEmailInput] = useState('')
 
     // Department colors matching the theme
     const DEPARTMENT_COLORS = {
@@ -101,6 +104,31 @@ const DepartmentRoutingPage = () => {
                 variant: "destructive",
                 title: "Update failed",
                 description: err.response?.data?.detail || "Could not update mapping.",
+            })
+        }
+    }
+
+    const updateDepartmentEmail = async (deptKey, newEmail) => {
+        try {
+            await axios.put(
+                `${API_URL}/api/departments/${deptKey}/email?email=${encodeURIComponent(newEmail)}`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+
+            toast({
+                title: "Forwarding email updated",
+                description: `${deptKey} will now forward to ${newEmail}`,
+            })
+
+            // Refresh data to reflect the change
+            await fetchData(true)
+            setEditingEmail(null)
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Update failed",
+                description: err.response?.data?.detail || "Could not update department email.",
             })
         }
     }
@@ -254,9 +282,40 @@ const DepartmentRoutingPage = () => {
 
                                                 <div className="flex items-center gap-2 text-sm mb-4">
                                                     <Mail className="h-4 w-4 text-muted-foreground" />
-                                                    <span className="text-muted-foreground font-mono text-xs">
-                                                        {dept.email}
-                                                    </span>
+                                                    {editingEmail === deptKey ? (
+                                                        <div className="flex items-center gap-1 flex-1">
+                                                            <Input
+                                                                value={emailInput}
+                                                                onChange={(e) => setEmailInput(e.target.value)}
+                                                                placeholder="department@gmail.com"
+                                                                className="h-7 text-xs font-mono"
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') {
+                                                                        updateDepartmentEmail(deptKey, emailInput)
+                                                                    } else if (e.key === 'Escape') {
+                                                                        setEditingEmail(null)
+                                                                    }
+                                                                }}
+                                                                autoFocus
+                                                            />
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateDepartmentEmail(deptKey, emailInput)}>
+                                                                <Check className="h-3 w-3 text-green-600" />
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingEmail(null)}>
+                                                                <X className="h-3 w-3 text-red-600" />
+                                                            </Button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1 flex-1 cursor-pointer group/email" onClick={() => { setEditingEmail(deptKey); setEmailInput(dept.email || '') }}>
+                                                            <span className={cn("font-mono text-xs", dept.email?.includes('@company.com') ? 'text-orange-500 italic' : 'text-muted-foreground')}>
+                                                                {dept.email || 'Click to set email'}
+                                                            </span>
+                                                            <Edit2 className="h-3 w-3 text-muted-foreground opacity-0 group-hover/email:opacity-100 transition-opacity" />
+                                                            {dept.email && !dept.email.includes('@company.com') && (
+                                                                <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full ml-1">✓ Active</span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div className="mb-3">

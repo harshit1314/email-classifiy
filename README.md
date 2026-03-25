@@ -63,12 +63,11 @@ This AI Email Classifier is an enterprise-grade solution designed to automate em
 ### 📧 Email Management
 - **Multi-Provider Support**: Gmail and Outlook integration
 - **Real-Time Polling**: Automatic email fetching with configurable intervals
-- **Smart Categorization**: spam, important, promotion, social, updates
-- **Priority Assignment**: Automatic urgency detection
-- **Department Routing**: Intelligent email distribution
-- **Email Filtering**: Custom rule-based filters
-- **Auto-Reply**: Configurable automated responses
-- **Batch Processing**: Handle multiple emails efficiently
+- **Strict 7-Category Pipeline**: Accurately classifies into `sales`, `finance`, `hr`, `marketing`, `it`, `spam`, and `customer_support`. 
+- **Smart Department Routing**: 7 predefined email departments with physical email forwarding support on misclassifications.
+- **Auto-Reply Config**: Configurable automated responses based on predicted classifications.
+- **Bidirectional Deletion Sync**: Deleting emails from the app automatically moves them to Gmail's Trash, and deleting from Gmail automatically sweeps them out of the App.
+- **Manual Physical Re-Routing**: In-app UI corrections instantly trigger physical forwards to the updated department's inbox.
 
 ### 📅 Calendar Integration
 - **AI Meeting Extraction**: Automatically detect meetings from email content

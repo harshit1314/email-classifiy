@@ -16,46 +16,15 @@ class DepartmentRoutingService:
     
     def __init__(self):
         """Initialize department routing service"""
-        # Map categories to departments
+        # Map categories to departments directly
         self.category_to_department = {
-            # Sales Department
-            "Sales_Inquiry": "Sales",
-            "Partnership_Offer": "Sales",
             "sales": "Sales",
-            
-            # HR Department
-            "HR_Inquiry": "HR",
             "hr": "HR",
-            
-            # Finance Department
-            "Billing_Issue": "Finance",
             "finance": "Finance",
-            
-            # Support Department
-            "Support_Request": "Support",
-            "customer_service": "Support",
-            "it_support": "Support",
-            
-            # Marketing Department
-            "General_Feedback": "Marketing",
             "marketing": "Marketing",
-            "general": "Marketing",
-            
-            # IT/Admin Department
-            "Spam": "IT",
-            "Unknown": "IT",
-            "spam": "IT",
             "it": "IT",
-            "pending": "IT",
-            
-            # Additional categories
-            "important": "Support",
-            "promotion": "Marketing",
-            "social": "Marketing",
-            "updates": "Support",
-            "legal": "IT",
-            "management": "IT",
-            "operations": "Support"
+            "spam": "IT",
+            "customer_support": "Support"
         }
         
         # Department descriptions
@@ -63,32 +32,32 @@ class DepartmentRoutingService:
             "Sales": {
                 "name": "Sales",
                 "description": "Sales inquiries, leads, and partnership offers",
-                "email": "sales@company.com"
+                "email": "hcstsales@gmail.com"
             },
             "HR": {
                 "name": "Human Resources",
                 "description": "Job applications, employee inquiries, and HR matters",
-                "email": "hr@company.com"
+                "email": "hiringhcst@gmail.com"
             },
             "Finance": {
                 "name": "Finance",
                 "description": "Billing issues, payment inquiries, and financial matters",
-                "email": "finance@company.com"
+                "email": "generalfundmanager@gmail.com"
             },
             "Support": {
                 "name": "Customer Support",
                 "description": "Customer support requests and technical issues",
-                "email": "support@company.com"
+                "email": "customercarehcst@gmail.com"
             },
             "Marketing": {
                 "name": "Marketing",
                 "description": "General feedback, testimonials, and marketing inquiries",
-                "email": "marketing@company.com"
+                "email": "marketinghcst36@gmail.com"
             },
             "IT": {
                 "name": "IT/Admin",
-                "description": "Spam, unknown emails, and system administration",
-                "email": "it@company.com"
+                "description": "System administration, IT issues and Spam",
+                "email": "ithcst3@gmail.com"
             }
         }
         
@@ -193,6 +162,41 @@ class DepartmentRoutingService:
         self.category_to_department[category] = department
         logger.info(f"Updated mapping: {category} -> {department}")
         return True
+    
+    def update_department_email(self, department: str, new_email: str) -> bool:
+        """
+        Update a department's forwarding email address
+        
+        Args:
+            department: Department key (e.g. 'Sales', 'HR')
+            new_email: New email address for this department
+            
+        Returns:
+            True if successful
+        """
+        if department not in self.departments:
+            logger.warning(f"Department '{department}' not found. Available: {list(self.departments.keys())}")
+            return False
+        
+        old_email = self.departments[department].get('email', '')
+        self.departments[department]['email'] = new_email
+        logger.info(f"Updated {department} email: {old_email} -> {new_email}")
+        return True
+    
+    def get_department_email(self, department: str) -> Optional[str]:
+        """
+        Get forwarding email address for a department
+        
+        Args:
+            department: Department key
+            
+        Returns:
+            Email address or None
+        """
+        dept_info = self.departments.get(department)
+        if dept_info:
+            return dept_info.get('email')
+        return None
     
     def get_emails_by_department_summary(self, email_counts: Dict[str, int]) -> Dict[str, Dict]:
         """

@@ -250,6 +250,28 @@ class EmailPoller:
                         logger.error(f"Error processing email {email_id}: {e}")
                         continue
                 
+                # Fetch deleted/trashed emails to sync deletions to app
+                if provider == 'gmail':
+                    try:
+                        trashed = server.service.users().messages().list(
+                            userId='me', 
+                            q='in:trash',
+                            maxResults=200
+                        ).execute()
+                        
+                        trashed_messages = trashed.get('messages', [])
+                        if trashed_messages:
+                            from app.database.logger import DatabaseLogger
+                            from app.database import mongo as mongo_db
+                            db_logger = DatabaseLogger()
+                            for msg in trashed_messages:
+                                msg_id = msg['id']
+                                db_logger.delete_by_email_id(msg_id)
+                                if mongo_db.is_enabled():
+                                    await mongo_db.delete_by_email_id(msg_id)
+                    except Exception as e:
+                        logger.error(f"Error syncing Gmail deletions: {e}")
+
                 # Update last check time
                 self.last_check_time[provider] = datetime.now()
                 

@@ -14,7 +14,7 @@ class ImprovedEmailClassifier:
     Uses a robust, weighted keyword-based engine for high-performance classification.
     """
     
-    CATEGORIES = ['hr', 'finance', 'marketing', 'sales', 'support']
+    CATEGORIES = ['hr', 'finance', 'marketing', 'sales', 'it', 'spam', 'customer_support']
     
     # Department Keywords with Weights
     DEPARTMENT_RULES = {
@@ -24,7 +24,7 @@ class ImprovedEmailClassifier:
             'weight': 1.5
         },
         'finance': {
-            'primary': ['invoice', 'budget', 'expense', 'reimbursement', 'audit', 'tax', 'revenue', 'p&l', 'fiscal', 'billing', 'accounts payable'],
+            'primary': ['invoice', 'budget', 'expense', 'reimbursement', 'tax', 'revenue', 'p&l', 'fiscal', 'accounts payable'],
             'secondary': ['payment', 'statement', 'treasury', 'bank', 'capital', 'expenditure', 'audit', 'receipt', 'wire transfer', 'funding'],
             'weight': 1.5
         },
@@ -38,7 +38,17 @@ class ImprovedEmailClassifier:
             'secondary': ['acquisition', 'closing', 'inbound', 'outbound', 'enablement', 'deals', 'customer acquisition', 'pricing'],
             'weight': 1.5
         },
-        'support': {
+        'it': {
+            'primary': ['network', 'server', 'firewall', 'cybersecurity', 'hardware', 'deployment', 'vpn', 'access request', 'system update', 'outage', 'aws', 'azure', 'cloud', 'software license', 'laptop'],
+            'secondary': ['software', 'patch', 'infrastructure', 'it support', 'endpoint', 'router', 'domain', 'hosting', 'monitor', 'keyboard', 'equipment'],
+            'weight': 1.5
+        },
+        'spam': {
+            'primary': ['viagra', 'lottery', 'prince', 'urgent transfer', 'wire funds immediately', 'unsubscribe', 'click here', 'claim prize', 'win', 'discount', 'free'],
+            'secondary': ['buy now', 'cheap', 'weight loss', 'casino', 'pills', 'guaranteed'],
+            'weight': 1.5
+        },
+        'customer_support': {
             'primary': ['login issue', 'bug report', 'password reset', 'ticket', 'troubleshooting', 'help', 'not working', 'error code', 'broken'],
             'secondary': ['customer support', 'knowledge base', 'resolution', 'resolved', 'feature request', 'feedback', 'how to', 'cancel subscription'],
             'weight': 1.5
@@ -96,7 +106,7 @@ class ImprovedEmailClassifier:
         if max_score == 0:
             # Fallback based on specific department indicators in subject
             # If still nothing, default to support
-            winner = 'support'
+            winner = 'customer_support'
             confidence = 0.2
         else:
             # Simple soft-max style confidence

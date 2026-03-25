@@ -66,7 +66,8 @@ class GmailServer(EmailServerInterface):
     """Gmail API Integration"""
     
     SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 
-              'https://www.googleapis.com/auth/gmail.modify']
+              'https://www.googleapis.com/auth/gmail.modify',
+              'https://www.googleapis.com/auth/gmail.send']
     
     def __init__(self):
         self.connected = False
@@ -371,6 +372,89 @@ class GmailServer(EmailServerInterface):
     async def tag_email(self, email_id: str, tag: str) -> bool:
         """Tag email in Gmail (add label)"""
         return await self.route_email(email_id, tag)
+    
+    async def forward_email(self, email_id: str, to_address: str) -> bool:
+        """Forward an email to a department address via Gmail API"""
+        if not self.connected or not self.service:
+            logger.warning("Cannot forward email: Gmail not connected")
+            return False
+        
+        try:
+            # Fetch original message in raw format
+            original = self.service.users().messages().get(
+                userId='me',
+                id=email_id,
+                format='full'
+            ).execute()
+            
+            # Extract headers from original
+            headers = {h['name']: h['value'] for h in original['payload'].get('headers', [])}
+            original_subject = headers.get('Subject', '(No Subject)')
+            original_from = headers.get('From', 'unknown')
+            original_date = headers.get('Date', '')
+            
+            # Get the body (snippet as fallback)
+            body_text = original.get('snippet', '')
+            
+            # Try to extract full body from parts
+            payload = original.get('payload', {})
+            if 'parts' in payload:
+                for part in payload['parts']:
+                    if part.get('mimeType') == 'text/plain':
+                        data = part.get('body', {}).get('data', '')
+                        if data:
+                            body_text = base64.urlsafe_b64decode(data).decode('utf-8', errors='ignore')
+                            break
+            elif payload.get('body', {}).get('data'):
+                body_text = base64.urlsafe_b64decode(payload['body']['data']).decode('utf-8', errors='ignore')
+            
+            # Build forwarding message
+            from email.mime.text import MIMEText
+            
+            forward_body = (
+                f"---------- Forwarded message ----------\n"
+                f"From: {original_from}\n"
+                f"Date: {original_date}\n"
+                f"Subject: {original_subject}\n\n"
+                f"{body_text}"
+            )
+            
+            msg = MIMEText(forward_body)
+            msg['to'] = to_address
+            msg['subject'] = f"Fwd: {original_subject}"
+            
+            # Encode and send
+            raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode('utf-8')
+            
+            self.service.users().messages().send(
+                userId='me',
+                body={'raw': raw_message}
+            ).execute()
+            
+            logger.info(f"Forwarded email {email_id} to {to_address} (Subject: {original_subject[:50]})")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error forwarding email {email_id} to {to_address}: {e}")
+            return False
+    
+    async def delete_email(self, email_id: str) -> bool:
+        """Move email to Gmail Trash"""
+        if not self.connected or not self.service:
+            logger.warning("Cannot delete email: Gmail not connected")
+            return False
+        
+        try:
+            self.service.users().messages().trash(
+                userId='me',
+                id=email_id
+            ).execute()
+            
+            logger.info(f"Moved Gmail email {email_id} to Trash")
+            return True
+        except Exception as e:
+            logger.error(f"Error trashing Gmail email {email_id}: {e}")
+            return False
     
     def is_connected(self) -> bool:
         return self.connected

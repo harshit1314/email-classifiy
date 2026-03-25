@@ -23,15 +23,17 @@ class DistilBERTEmailClassifier:
     def __init__(self, use_cuda: bool = False):
         self.device = "cuda" if use_cuda and torch.cuda.is_available() else "cpu"
         self.classifier = None
-        self.categories = ["hr", "finance", "marketing", "sales", "support"]
+        self.categories = ["hr", "finance", "marketing", "sales", "it", "spam", "customer_support"]
         
         # Descriptive labels for zero-shot classification
         self.category_labels = {
             "hr": "This email is about human resources, hiring, recruitment, employee benefits, payroll, onboarding, leave, performance review, resignation, or job posting",
-            "finance": "This email is about finance, accounting, budget, invoice, expense report, audit, tax, revenue, billing, reimbursement, or treasury",
+            "finance": "This email is about finance, accounting, budget, invoice, expense report, tax, revenue, reimbursement, treasury, or capital",
             "marketing": "This email is about marketing, campaign, social media, brand, SEO, content, advertising, webinar, newsletter, or lead generation",
             "sales": "This email is about sales, closing deals, pipeline, prospects, demos, quotas, commissions, partnerships, or customer acquisition",
-            "support": "This email is about customer support, help desk, technical issues, bug reports, troubleshooting, password reset, login problems, error codes, or feature requests"
+            "it": "This email is about information technology, IT systems, network infrastructure, software deployment, hardware issues, cybersecurity, cloud services, aws, azure, server, laptop, or software licenses",
+            "spam": "This email is a scam, phishing attempt, unsolicited promotion, fake alert, or completely irrelevant marketing junk",
+            "customer_support": "This email is about customer support, help desk, technical issues, bug reports, troubleshooting, password reset, login problems, error codes, or feature requests"
         }
         
         # Department keywords for confidence boosting
@@ -60,7 +62,17 @@ class DistilBERTEmailClassifier:
                 "acquisition", "closing", "inbound", "proposal", "rfp",
                 "pricing", "contract", "renewal", "upsell"
             ],
-            "support": [
+            "it": [
+                "network", "server", "firewall", "cybersecurity", "hardware", 
+                "deployment", "vpn", "access request", "system update", "outage",
+                "aws", "azure", "cloud", "software license", "laptop", "monitor",
+                "keyboard", "it support", "domain", "hosting"
+            ],
+            "spam": [
+                "viagra", "lottery", "prince", "urgent transfer", "wire funds immediately",
+                "unsubscribe", "click here", "claim prize", "win", "discount", "free"
+            ],
+            "customer_support": [
                 "login issue", "bug report", "password reset", "ticket",
                 "troubleshooting", "not working", "error code", "broken",
                 "customer support", "knowledge base", "resolved", "feature request",
@@ -139,7 +151,7 @@ class DistilBERTEmailClassifier:
         
         if not text.strip():
             return {
-                "category": "support",
+                "category": "customer_support",
                 "confidence": 0.0,
                 "probabilities": {c: 0.0 for c in self.categories},
                 "explanation": "Empty email content"
@@ -195,7 +207,7 @@ class DistilBERTEmailClassifier:
         except Exception as e:
             logger.error(f"Classification error: {e}")
             return {
-                "category": "support",
+                "category": "customer_support",
                 "confidence": 0.0,
                 "probabilities": {c: 0.0 for c in self.categories},
                 "explanation": f"Error: {str(e)}"

@@ -9,13 +9,13 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button'
-import { Loader2, Mail, Calendar, Tag, Sparkles, Copy, Check, X } from 'lucide-react'
+import { Loader2, Mail, Calendar, Tag, Sparkles, Copy, Check, X, Send, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from "@/components/ui/use-toast"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from '@/components/ui/label'
 
-const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
+const EmailDetailModal = ({ isOpen, onClose, emailId, emailData, onDelete }) => {
     const { API_URL, token } = useAuth()
     const { toast } = useToast()
     const [email, setEmail] = useState(emailData || null)
@@ -23,24 +23,18 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
     const [replyDraft, setReplyDraft] = useState(null)
     const [generatingReply, setGeneratingReply] = useState(false)
     const [copied, setCopied] = useState(false)
+    const [forwarding, setForwarding] = useState(false)
+    const [deleting, setDeleting] = useState(false)
 
     const getCategoryColor = (category) => {
         const colors = {
-            spam: "bg-red-100 text-red-800",
-            important: "bg-orange-100 text-orange-800",
-            promotion: "bg-blue-100 text-blue-800",
-            social: "bg-green-100 text-green-800",
-            updates: "bg-purple-100 text-purple-800",
-            sales: "bg-emerald-100 text-emerald-800",
-            hr: "bg-pink-100 text-pink-800",
-            finance: "bg-amber-100 text-amber-800",
-            it_support: "bg-cyan-100 text-cyan-800",
-            legal: "bg-slate-100 text-slate-800",
-            marketing: "bg-violet-100 text-violet-800",
-            customer_service: "bg-indigo-100 text-indigo-800",
-            operations: "bg-teal-100 text-teal-800",
-            executive: "bg-rose-100 text-rose-800",
-            general: "bg-gray-100 text-gray-700"
+            sales: "bg-emerald-100 text-emerald-800 border border-emerald-200",
+            finance: "bg-amber-100 text-amber-800 border border-amber-200",
+            hr: "bg-pink-100 text-pink-800 border border-pink-200",
+            marketing: "bg-violet-100 text-violet-800 border border-violet-200",
+            it: "bg-cyan-100 text-cyan-800 border border-cyan-200",
+            spam: "bg-red-100 text-red-800 border border-red-200",
+            customer_support: "bg-indigo-100 text-indigo-800 border border-indigo-200"
         }
         return colors[category?.toLowerCase()] || "bg-gray-100 text-gray-800"
     }
@@ -110,6 +104,32 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
         setReplyDraft(null)
         setCopied(false)
         onClose()
+    }
+
+    const handleForward = async () => {
+        if (!email?.id) return
+        setForwarding(true)
+        try {
+            const response = await axios.post(
+                `${API_URL}/api/departments/forward?classification_id=${email.id}`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+            toast({
+                title: "Email Forwarded",
+                description: `Forwarded to ${response.data.forwarded_to}`,
+            })
+            // Update email data locally
+            setEmail(prev => ({ ...prev, forwarded_to: response.data.forwarded_to }))
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Forwarding Failed",
+                description: err.response?.data?.detail || "Could not forward email.",
+            })
+        } finally {
+            setForwarding(false)
+        }
     }
 
     return (
@@ -193,6 +213,35 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                                             🏢 {email.department}
                                         </span>
                                     </div>
+                                )}
+
+                                {email.forwarded_to && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-muted-foreground">Forwarded to:</span>
+                                        <span className="text-sm px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 font-semibold shadow-sm">
+                                            ✉️ {email.forwarded_to}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Forward to Department */}
+                            <div className="flex items-center gap-2 pt-2 border-t">
+                                <Button
+                                    onClick={handleForward}
+                                    disabled={forwarding}
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs"
+                                >
+                                    {forwarding ? (
+                                        <><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Forwarding...</>
+                                    ) : (
+                                        <><Send className="mr-1 h-3 w-3" /> {email.forwarded_to ? 'Re-forward' : 'Forward to Department'}</>
+                                    )}
+                                </Button>
+                                {email.forwarded_to && (
+                                    <span className="text-xs text-muted-foreground">Last sent to {email.forwarded_to}</span>
                                 )}
                             </div>
                         </div>
@@ -347,8 +396,33 @@ const EmailDetailModal = ({ isOpen, onClose, emailId, emailData }) => {
                             )}
                         </div>
 
-                        {/* Close Button */}
-                        <div className="flex justify-end pt-4 border-t">
+                        {/* Action Buttons */}
+                        <div className="flex justify-between pt-4 border-t">
+                            <Button
+                                onClick={async () => {
+                                    if (!window.confirm('Delete this email? It will also be moved to Gmail Trash.')) return
+                                    setDeleting(true)
+                                    try {
+                                        await axios.delete(
+                                            `${API_URL}/api/emails/${email.id}`,
+                                            { headers: { Authorization: `Bearer ${token}` } }
+                                        )
+                                        toast({ title: "Email Deleted", description: "Moved to Gmail Trash" })
+                                        if (onDelete) onDelete(email.id)
+                                        handleClose()
+                                    } catch (err) {
+                                        toast({ variant: "destructive", title: "Delete Failed", description: err.response?.data?.detail || err.message })
+                                    } finally {
+                                        setDeleting(false)
+                                    }
+                                }}
+                                variant="outline"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                disabled={deleting}
+                            >
+                                {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                                Delete
+                            </Button>
                             <Button onClick={handleClose} variant="outline">
                                 Close
                             </Button>

@@ -17,22 +17,26 @@ const LiveIngestionsPage = () => {
 
     const getCategoryColor = (category) => {
         const colors = {
+            sales: "bg-emerald-100 text-emerald-800",
+            finance: "bg-amber-100 text-amber-800",
+            hr: "bg-pink-100 text-pink-800",
+            marketing: "bg-violet-100 text-violet-800",
+            it: "bg-cyan-100 text-cyan-800",
             spam: "bg-red-100 text-red-800",
-            important: "bg-orange-100 text-orange-800",
-            promotion: "bg-blue-100 text-blue-800",
-            social: "bg-green-100 text-green-800",
-            updates: "bg-purple-100 text-purple-800"
+            customer_support: "bg-indigo-100 text-indigo-800"
         }
         return colors[category] || "bg-gray-100 text-gray-800"
     }
 
     const getCategoryBgColor = (category) => {
         const colors = {
+            sales: "bg-emerald-50 border-emerald-200",
+            finance: "bg-amber-50 border-amber-200",
+            hr: "bg-pink-50 border-pink-200",
+            marketing: "bg-violet-50 border-violet-200",
+            it: "bg-cyan-50 border-cyan-200",
             spam: "bg-red-50 border-red-200",
-            important: "bg-orange-50 border-orange-200",
-            promotion: "bg-blue-50 border-blue-200",
-            social: "bg-green-50 border-green-200",
-            updates: "bg-purple-50 border-purple-200"
+            customer_support: "bg-indigo-50 border-indigo-200"
         }
         return colors[category] || "bg-gray-50 border-gray-200"
     }

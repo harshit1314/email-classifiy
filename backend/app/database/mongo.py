@@ -229,3 +229,23 @@ async def update_classification_by_dbid(db_id: str, result: Dict[str, Any]) -> b
     except Exception as e:
         logger.warning(f"MongoDB update by _id failed for _id={db_id}: {e}")
         return False
+
+async def delete_by_email_id(email_id: str) -> bool:
+    """Delete an email from both collections by its email_id"""
+    if _db is None or not email_id:
+        return False
+        
+    try:
+        class_col = _db[Config.MONGO_COLLECTION]
+        ingest_col = _db[Config.MONGO_INGEST_COLLECTION]
+        
+        c_res = await class_col.delete_many({"email_id": email_id})
+        i_res = await ingest_col.delete_many({"email_id": email_id})
+        
+        deleted = c_res.deleted_count > 0 or i_res.deleted_count > 0
+        if deleted:
+            logger.info(f"MongoDB deleted email_id={email_id}")
+        return deleted
+    except Exception as e:
+        logger.warning(f"MongoDB delete_by_email_id failed for email_id={email_id}: {e}")
+        return False
