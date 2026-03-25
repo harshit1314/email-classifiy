@@ -99,6 +99,11 @@ class DatabaseLogger:
         except sqlite3.OperationalError:
             pass
         
+        try:
+            cursor.execute('ALTER TABLE classifications ADD COLUMN forwarded_to TEXT')
+        except sqlite3.OperationalError:
+            pass
+        
         # Performance optimization: Add indexes for frequently queried columns
         try:
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_category ON classifications(category)')
@@ -417,6 +422,49 @@ class DatabaseLogger:
         conn.close()
         return feedback_id
     
+    def update_forwarded_to(self, classification_id: int, forwarded_to: str):
+        """Record which department email address an email was forwarded to"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE classifications SET forwarded_to = ? WHERE id = ?
+        ''', (forwarded_to, classification_id))
+        conn.commit()
+        conn.close()
+        logger.info(f"Recorded forwarding for classification {classification_id} -> {forwarded_to}")
+    
+    def delete_classification(self, classification_id: int) -> Optional[str]:
+        """Delete a classification record and return its email_id for Gmail sync"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Get email_id before deleting
+        cursor.execute('SELECT email_id FROM classifications WHERE id = ?', (classification_id,))
+        row = cursor.fetchone()
+        email_id = row[0] if row else None
+        
+        # Delete from classifications
+        cursor.execute('DELETE FROM classifications WHERE id = ?', (classification_id,))
+        
+        # Delete related feedback
+        cursor.execute('DELETE FROM user_feedback WHERE classification_id = ?', (classification_id,))
+        
+        conn.commit()
+        conn.close()
+        logger.info(f"Deleted classification {classification_id} (email_id: {email_id})")
+        return email_id
+    
+    def delete_by_email_id(self, email_id: str):
+        """Delete a classification by its Gmail email_id"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM classifications WHERE email_id = ?', (email_id,))
+        deleted = cursor.rowcount
+        conn.commit()
+        conn.close()
+        if deleted:
+            logger.info(f"Deleted classification for email_id: {email_id}")
+    
     def get_uncertain_classifications(self, user_id: Optional[int] = None, threshold: float = 0.7, limit: int = 50) -> List[Dict]:
         """Get classifications with low confidence for active learning"""
         conn = sqlite3.connect(self.db_path)
@@ -449,50 +497,62 @@ class DatabaseLogger:
         conn.close()
         return results
     
-    def get_statistics(self) -> Dict:
-        """Get statistics for dashboard"""
+    def get_statistics(self, user_id: Optional[int] = None) -> Dict:
+        """Get statistics for dashboard, optionally filtered by user"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
+        user_filter = "WHERE 1=1"
+        params = []
+        if user_id is not None:
+            user_filter = "WHERE (user_id = ? OR user_id IS NULL)"
+            params = [user_id]
+            
+        category_filter = f"{user_filter} AND category NOT IN ('pending', 'unknown', 'unclassified', '')"
+        
         # Total classifications
-        cursor.execute('SELECT COUNT(*) FROM classifications')
+        cursor.execute(f'SELECT COUNT(*) FROM classifications {user_filter}', params)
         total = cursor.fetchone()[0]
         
-        # By category (using original category for consistency with training)
-        cursor.execute('''
+        # By category
+        cursor.execute(f'''
             SELECT category, COUNT(*) as count
             FROM classifications
+            {category_filter}
             GROUP BY category
-        ''')
+        ''', params)
         category_counts = {row[0]: row[1] for row in cursor.fetchall()}
         
-        # By department (using the actual department column which handles manual routing overrides)
-        # Exclude 'pending' emails so total routed matches classified count
-        cursor.execute('''
+        # By department
+        cursor.execute(f'''
             SELECT department, COUNT(*) as count
             FROM classifications
-            WHERE department IS NOT NULL AND department != '' 
+            {category_filter} AND department IS NOT NULL AND department != '' 
             AND processing_status = 'processed'
-            AND category NOT IN ('pending', 'unknown', 'unclassified', '')
             GROUP BY department
-        ''')
+        ''', params)
         department_counts = {row[0]: row[1] for row in cursor.fetchall()}
         
         # Average confidence
-        cursor.execute('SELECT AVG(confidence) FROM classifications')
+        cursor.execute(f'SELECT AVG(confidence) FROM classifications {category_filter}', params)
         avg_confidence = cursor.fetchone()[0] or 0.0
         
         # Recent activity (last 24 hours)
-        cursor.execute('''
+        cursor.execute(f'''
             SELECT COUNT(*) FROM classifications
-            WHERE timestamp > datetime('now', '-1 day')
-        ''')
+            {user_filter} AND timestamp > datetime('now', '-1 day')
+        ''', params)
         recent_count = cursor.fetchone()[0]
+        
+        # Total valid classified count
+        cursor.execute(f'SELECT COUNT(*) FROM classifications {category_filter}', params)
+        classified_total = cursor.fetchone()[0]
         
         conn.close()
         
         return {
             "total_classifications": total,
+            "classified_count": classified_total,
             "category_distribution": category_counts,
             "department_distribution": department_counts,
             "average_confidence": float(avg_confidence),

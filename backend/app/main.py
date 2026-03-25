@@ -114,12 +114,23 @@ async def lifespan(app: FastAPI):
     # Initialize services (following the architecture)
     db_logger = DatabaseLogger()
     
+    # Initialize department routing service early (needed by action_service)
+    if DEPARTMENT_ROUTING_AVAILABLE:
+        try:
+            department_routing_service = DepartmentRoutingService()
+            logger.info("✅ Department Routing Service initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize department routing service: {e}")
+    
     # Initialize email poller first to get access to servers
     ingestion_service_placeholder = IngestionService()
     email_poller = EmailPoller(ingestion_service=ingestion_service_placeholder)
     
-    # Pass gmail server to action service for real-time labeling
-    action_service = ActionService(email_server=email_poller.gmail_server)
+    # Pass gmail server AND department routing to action service for real-time labeling + forwarding
+    action_service = ActionService(
+        email_server=email_poller.gmail_server,
+        department_routing_service=department_routing_service
+    )
     
     processing_service = ProcessingService(
         action_service=action_service, 
@@ -159,14 +170,6 @@ async def lifespan(app: FastAPI):
     from app.services.model_comparison_service import ModelComparisonService
     model_comparison_service = ModelComparisonService()
     logger.info("✅ Model Comparison Service initialized")
-
-    # Initialize department routing service
-    if DEPARTMENT_ROUTING_AVAILABLE:
-        try:
-            department_routing_service = DepartmentRoutingService()
-            logger.info("Department Routing Service initialized")
-        except Exception as e:
-            logger.warning(f"Failed to initialize department routing service: {e}")
     
     try:
         # Check if we can auto-connect to Gmail
@@ -682,6 +685,125 @@ async def get_department_info(department_name: str):
         raise
     except Exception as e:
         logger.error(f"Error getting department info: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/departments/{department_name}/email")
+async def update_department_email(department_name: str, email: str):
+    """
+    Update a department's forwarding email address
+    """
+    try:
+        if not department_routing_service:
+            raise HTTPException(status_code=503, detail="Department routing service not available")
+        
+        success = department_routing_service.update_department_email(department_name, email)
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Department '{department_name}' not found")
+        
+        return {"message": f"Updated {department_name} email to {email}", "department": department_name, "email": email}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating department email: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/departments/forward")
+async def forward_email_to_department(classification_id: int):
+    """
+    Manually forward a classified email to its department's email address
+    """
+    try:
+        if not department_routing_service or not action_service:
+            raise HTTPException(status_code=503, detail="Services not available")
+        
+        classification = db_logger.get_classification_by_id(classification_id)
+        if not classification:
+            raise HTTPException(status_code=404, detail="Classification not found")
+        
+        email_id = classification.get('email_id')
+        if not email_id:
+            raise HTTPException(status_code=400, detail="No Gmail message ID found for this classification")
+        
+        category = classification.get('user_corrected_category') or classification.get('category')
+        if not category:
+            raise HTTPException(status_code=400, detail="No category assigned to this email")
+        
+        result = await action_service.forward_to_department(email_id, category)
+        
+        if not result:
+            raise HTTPException(status_code=400, detail="Forwarding not configured for this department (set a real email address first)")
+        
+        if result.get('status') == 'failed':
+            raise HTTPException(status_code=500, detail=f"Forwarding failed: {result.get('error', 'Unknown error')}")
+        
+        # Log the forwarding in the database
+        db_logger.update_forwarded_to(classification_id, result.get('to', ''))
+        
+        return {
+            "message": f"Email forwarded to {result.get('to')}",
+            "department": result.get('department'),
+            "forwarded_to": result.get('to'),
+            "status": result.get('status')
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error forwarding email: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/emails/{classification_id}")
+async def delete_email(classification_id: int, current_user: User = Depends(get_current_user)):
+    """
+    Delete an email from the app database and move it to Gmail Trash
+    """
+    try:
+        # Check if classification exists
+        classification = db_logger.get_classification_by_id(classification_id)
+        if not classification:
+            raise HTTPException(status_code=404, detail="Email not found")
+        
+        gmail_email_id = classification.get('email_id')
+        logger.info(f"Delete request for classification {classification_id}, gmail_id: {gmail_email_id}")
+        
+        # Delete from Gmail (move to trash)
+        gmail_deleted = False
+        if gmail_email_id:
+            # Try to get gmail server
+            gmail_server = None
+            if email_poller and hasattr(email_poller, 'gmail_server') and email_poller.gmail_server:
+                gmail_server = email_poller.gmail_server
+                logger.info(f"Gmail server found, connected: {gmail_server.is_connected()}")
+            
+            if gmail_server and gmail_server.is_connected():
+                try:
+                    gmail_deleted = await gmail_server.delete_email(gmail_email_id)
+                    logger.info(f"Gmail trash result: {gmail_deleted}")
+                except Exception as e:
+                    logger.warning(f"Failed to trash email in Gmail: {e}")
+            else:
+                logger.warning(f"Gmail not available for deletion. email_poller={email_poller is not None}, gmail_server={gmail_server is not None}")
+        else:
+            logger.warning(f"No gmail email_id for classification {classification_id}")
+        
+        # Delete from local database and MongoDB
+        try:
+            from app.database import mongo as mongo_db
+            if gmail_email_id and mongo_db.is_enabled():
+                await mongo_db.delete_by_email_id(gmail_email_id)
+        except Exception as e:
+            logger.error(f"Failed to delete email from MongoDB: {e}")
+            
+        db_logger.delete_classification(classification_id)
+        
+        return {
+            "message": "Email deleted successfully",
+            "gmail_trashed": gmail_deleted,
+            "classification_id": classification_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting email: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/analytics/by-department")
@@ -1574,8 +1696,7 @@ async def submit_feedback(
             new_department=new_department
         )
         
-        # 3. Apply label in Gmail if email_id is present
-        # In ActionService.tag_email mainly needs email_id and tag
+        # 3. Apply label and routing actions in Gmail if email_id is present
         gmail_message_id = classification.get('email_id')
         if gmail_message_id and action_service:
             try:
@@ -1587,8 +1708,18 @@ async def submit_feedback(
                     sender=classification.get('email_sender', ''),
                     email_id=gmail_message_id
                 )
+                
+                # RE-ROUTE: physically forward it to the correct department's email inbox!
+                logger.info(f"Rerouting manually corrected email to new department inbox...")
+                forward_result = await action_service.forward_to_department(
+                    email_id=gmail_message_id, 
+                    category=corrected_category
+                )
+                if forward_result and forward_result.get("status") == "success":
+                    # Update the forwarded_to db column for analytics parity
+                    db_logger.update_forwarded_to(classification_id, new_department)
             except Exception as e:
-                logger.warning(f"Failed to sync label to Gmail: {e}")
+                logger.warning(f"Failed to sync actions to Gmail: {e}")
         
         # Verify update
         updated = db_logger.get_classification_by_id(classification_id)
@@ -3362,38 +3493,16 @@ async def verify_email_routing(
 
 @app.get("/api/dashboard/statistics")
 async def get_dashboard_statistics(current_user: User = Depends(get_current_user)):
-    """Get dashboard statistics including total emails, classified count, and category breakdown"""
+    """Get dashboard statistics using optimized SQL queries"""
     try:
-        # Use get_classifications which already handles NULL user_ids correctly
-        classifications = db_logger.get_classifications(user_id=current_user.id, limit=10000)
-        
-        total_emails = len(classifications)
-        classified_count = 0
-        unclassified_count = 0
-        total_confidence = 0
-        category_breakdown = {}
-        
-        for email in classifications:
-            category = email.get("category")
-            confidence = email.get("confidence", 0)
-            
-            # All emails from get_classifications are already filtered (no pending)
-            classified_count += 1
-            total_confidence += confidence
-            
-            # Build category breakdown
-            if category not in category_breakdown:
-                category_breakdown[category] = 0
-            category_breakdown[category] += 1
-        
-        average_confidence = total_confidence / classified_count if classified_count > 0 else 0
+        stats = db_logger.get_statistics(user_id=current_user.id)
         
         return {
-            "total_emails": total_emails,
-            "classified_count": classified_count,
-            "unclassified_count": 0,  # get_classifications already excludes unclassified
-            "average_confidence": average_confidence,
-            "category_breakdown": category_breakdown
+            "total_emails": stats["total_classifications"],
+            "classified_count": stats["classified_count"],
+            "unclassified_count": 0,  
+            "average_confidence": stats["average_confidence"],
+            "category_breakdown": stats["category_distribution"]
         }
     except Exception as e:
         logger.error(f"Error fetching dashboard statistics: {e}")

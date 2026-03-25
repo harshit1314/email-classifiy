@@ -26,21 +26,13 @@ const DashboardPage = () => {
     const [pollingStatus, setPollingStatus] = useState(null)
 
     const CATEGORY_COLORS = {
+        sales: "#10B981",        // Emerald
+        finance: "#F59E0B",      // Amber
         hr: "#EC4899",           // Pink
-        finance: "#10B981",      // Green
-        marketing: "#3B82F6",    // Blue
-        it_support: "#8B5CF6",   // Purple
-        operations: "#F59E0B",   // Amber
-        general: "#6B7280",      // Gray
-        sales: "#EF4444",        // Red
-        legal: "#14B8A6",        // Teal
-        executive: "#F97316",    // Orange
-        updates: "#A855F7",      // Purple
-        promotion: "#3B82F6",    // Blue
-        social: "#10B981",       // Green
-        important: "#F97316",    // Orange
-        customer_service: "#06B6D4", // Cyan
-        spam: "#EF4444"          // Red
+        marketing: "#8B5CF6",    // Violet
+        it: "#06B6D4",           // Cyan
+        spam: "#EF4444",         // Red
+        customer_support: "#6366F1" // Indigo
     }
 
     const getCategoryColor = (category) => CATEGORY_COLORS[category] || "#6B7280"

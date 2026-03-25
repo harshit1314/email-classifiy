@@ -16,15 +16,17 @@ ENTERPRISE_ROUTING_AVAILABLE = False
 class ActionService:
     """Service for handling actions based on email classification"""
     
-    def __init__(self, use_advanced_rules: bool = True, email_server=None):
+    def __init__(self, use_advanced_rules: bool = True, email_server=None, department_routing_service=None):
         """
         Initialize Action Service
         
         Args:
             use_advanced_rules: If True, use advanced rule engine for deep classification
             email_server: Email server interface for routing/tagging
+            department_routing_service: Department routing service for email forwarding
         """
         self.email_server = email_server
+        self.department_routing_service = department_routing_service
         self.action_rules = {
             "spam": {"route": "spam", "tag": "spam", "priority": "low"},
             "important": {"route": "inbox", "tag": "important", "priority": "high"},
@@ -156,6 +158,12 @@ class ActionService:
                     "status": "completed"
                 })
         
+        # Forward email to department address
+        if email_id and self.department_routing_service and self.email_server:
+            forward_result = await self.forward_to_department(email_id, category)
+            if forward_result:
+                result["actions_taken"].append(forward_result)
+        
         logger.info(f"Actions completed: {len(result['actions_taken'])} actions taken")
         
         return result
@@ -206,6 +214,58 @@ class ActionService:
             "to": to,
             "status": "completed"
         }
+    
+    async def forward_to_department(self, email_id: str, category: str) -> Optional[Dict]:
+        """
+        Forward an email to the department address based on its category.
+        
+        Args:
+            email_id: Gmail message ID
+            category: Classification category
+        Returns:
+            Action result dict or None if forwarding not applicable
+        """
+        if not self.department_routing_service or not self.email_server:
+            return None
+        
+        try:
+            department = self.department_routing_service.get_department_for_category(category)
+            dept_info = self.department_routing_service.get_department_info(department)
+            
+            if not dept_info:
+                logger.warning(f"No department info found for: {department}")
+                return None
+            
+            dept_email = dept_info.get('email', '')
+            
+            # Skip placeholder emails
+            if not dept_email or '@company.com' in dept_email:
+                logger.info(f"Skipping forward for {department}: email not configured ('{dept_email}')")
+                return None
+            
+            success = await self.email_server.forward_email(email_id, dept_email)
+            
+            result = {
+                "action": "forward_to_department",
+                "department": department,
+                "to": dept_email,
+                "status": "completed" if success else "failed"
+            }
+            
+            if success:
+                logger.info(f"Forwarded email {email_id} to {department} ({dept_email})")
+            else:
+                logger.warning(f"Failed to forward email {email_id} to {dept_email}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error forwarding email to department: {e}")
+            return {
+                "action": "forward_to_department",
+                "status": "failed",
+                "error": str(e)
+            }
     
     def update_action_rules(self, rules: Dict):
         """Update action rules (controlled by admin dashboard)"""

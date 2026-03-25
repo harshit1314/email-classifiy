@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
-import { RefreshCw, Search, Filter, Loader2, Sparkles, Copy, Check, X, Mail, Edit3 } from 'lucide-react'
+import { RefreshCw, Search, Filter, Loader2, Sparkles, Copy, Check, X, Mail, Edit3, Trash2 } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { format } from 'date-fns'
@@ -73,19 +73,18 @@ const EmailsPage = () => {
     const [copied, setCopied] = useState(false)
     const [isSearching, setIsSearching] = useState(false)
     const [correctingCategory, setCorrectingCategory] = useState(null)
+    const [deletingEmail, setDeletingEmail] = useState(null)
 
     // Available categories for correction
     const availableCategories = [
-        'important', 'urgent', 'general', 'spam', 'promotion',
-        'social', 'work', 'personal', 'finance', 'travel',
-        'hr', 'it', 'legal', 'marketing', 'sales'
+        'sales', 'finance', 'hr', 'marketing', 'it', 'spam', 'customer_support'
     ]
 
     const fetchData = async () => {
         setLoading(true)
         try {
             const [classRes, unclassRes, statsRes] = await Promise.all([
-                axios.get(`${API_URL}/api/dashboard/classifications?limit=1000`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${API_URL}/api/dashboard/classifications?limit=200`, { headers: { Authorization: `Bearer ${token}` } }),
                 axios.get(`${API_URL}/api/dashboard/unclassified`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { emails: [] } })),
                 axios.get(`${API_URL}/api/dashboard/statistics`, { headers: { Authorization: `Bearer ${token}` } })
             ])
@@ -261,6 +260,40 @@ const EmailsPage = () => {
         }
     }
 
+    const handleEmailDelete = async (emailId) => {
+        if (!window.confirm('Are you sure you want to delete this email? It will also be moved to Trash in Gmail.')) return
+        
+        setDeletingEmail(emailId)
+        try {
+            await axios.delete(
+                `${API_URL}/api/emails/${emailId}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+            
+            toast({
+                title: "Email Deleted",
+                description: "Email removed from app and moved to Gmail Trash",
+            })
+            
+            // Close modal if this email was selected
+            if (selectedEmail?.id === emailId) {
+                setDetailModalOpen(false)
+                setSelectedEmail(null)
+            }
+            
+            // Refresh data
+            await fetchData()
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Delete Failed",
+                description: formatErrorMessage(err.response?.data?.detail || err.message)
+            })
+        } finally {
+            setDeletingEmail(null)
+        }
+    }
+
     const handleEmailClick = (email) => {
         setSelectedEmail(email)
         setDetailModalOpen(true)
@@ -290,23 +323,13 @@ const EmailsPage = () => {
 
     const getCategoryColor = (category) => {
         const colors = {
-            // Legacy categories
-            spam: "bg-red-100 text-red-800",
-            important: "bg-orange-100 text-orange-800",
-            promotion: "bg-blue-100 text-blue-800",
-            social: "bg-green-100 text-green-800",
-            updates: "bg-purple-100 text-purple-800",
-            // Enterprise departments
-            sales: "bg-emerald-100 text-emerald-800",
-            hr: "bg-pink-100 text-pink-800",
-            finance: "bg-amber-100 text-amber-800",
-            it_support: "bg-cyan-100 text-cyan-800",
-            legal: "bg-slate-100 text-slate-800",
-            marketing: "bg-violet-100 text-violet-800",
-            customer_service: "bg-indigo-100 text-indigo-800",
-            operations: "bg-teal-100 text-teal-800",
-            executive: "bg-rose-100 text-rose-800",
-            general: "bg-gray-100 text-gray-700"
+            sales: "bg-emerald-100 text-emerald-800 border border-emerald-200",
+            finance: "bg-amber-100 text-amber-800 border border-amber-200",
+            hr: "bg-pink-100 text-pink-800 border border-pink-200",
+            marketing: "bg-violet-100 text-violet-800 border border-violet-200",
+            it: "bg-cyan-100 text-cyan-800 border border-cyan-200",
+            spam: "bg-red-100 text-red-800 border border-red-200",
+            customer_support: "bg-indigo-100 text-indigo-800 border border-indigo-200"
         }
         return colors[category?.toLowerCase()] || "bg-gray-100 text-gray-800"
     }
@@ -664,6 +687,23 @@ const EmailsPage = () => {
                                                     )}
                                                     Reply
                                                 </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleEmailDelete(email.id)
+                                                    }}
+                                                    disabled={deletingEmail === email.id}
+                                                >
+                                                    {deletingEmail === email.id ? (
+                                                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="mr-1 h-3 w-3" />
+                                                    )}
+                                                    Delete
+                                                </Button>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -746,6 +786,11 @@ const EmailsPage = () => {
                     }}
                     emailId={selectedEmail?.id}
                     emailData={selectedEmail}
+                    onDelete={(id) => {
+                        setDetailModalOpen(false)
+                        setSelectedEmail(null)
+                        fetchData()
+                    }}
                 />
             </Suspense>
         </div>

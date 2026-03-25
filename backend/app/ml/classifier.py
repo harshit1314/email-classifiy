@@ -212,70 +212,43 @@ class EmailClassifier:
         joblib.dump(self.model, self.model_path)
     
     def _map_bert_categories(self, result: Dict) -> Dict:
-        """Map BERT categories (spam, important, etc.) to enterprise categories"""
-        bert_to_enterprise = {
-            "spam": "Spam",
-            "important": "Support_Request",
-            "promotion": "Sales_Inquiry",  # Fixed: promotional emails should be sales inquiries, not spam
-            "social": "General_Feedback",
-            "work": "Support_Request", # Added missing work category
-            "general": "General_Feedback", # Added missing general category
-            "updates": "Support_Request",
-            "unknown": "Unknown"
-        }
+        """Map BERT categories to the 7 approved categories"""
+        return self._map_to_enterprise_categories(result)
         
-        category = result.get("category", "unknown")
-        mapped_category = bert_to_enterprise.get(category.lower(), "Unknown")
-        
-        # Update probabilities dictionary
-        probabilities = result.get("probabilities", {})
-        mapped_probabilities = {}
-        
-        for bert_cat, prob in probabilities.items():
-            enterprise_cat = bert_to_enterprise.get(bert_cat.lower(), "Unknown")
-            if enterprise_cat not in mapped_probabilities:
-                mapped_probabilities[enterprise_cat] = 0.0
-            mapped_probabilities[enterprise_cat] += prob
-        
-        result["category"] = mapped_category
-        result["probabilities"] = mapped_probabilities
-        
-        # Add urgency and sentiment defaults for compatibility
-        result.setdefault("urgency", "Medium")
-        result.setdefault("sentiment", "Neutral")
-        result.setdefault("keywords", [])
-        
-        return result
-    
     def _map_to_enterprise_categories(self, result: Dict) -> Dict:
-        """Map any category format to enterprise categories"""
+        """Map any category format to the 7 approved categories"""
+        VALID_CATEGORIES = {"hr", "finance", "marketing", "sales", "it", "spam", "customer_support"}
+        
         category_map = {
-            # BERT/TF-IDF categories
-            "spam": "Spam",
-            "important": "Support_Request",
-            "promotion": "Sales_Inquiry", # Fixed: promotional emails should be sales inquiries
-            "social": "General_Feedback",
-            "work": "Support_Request", # Added missing work category
-            "general": "General_Feedback", # Added missing general category
-            "updates": "Support_Request",
-            "unknown": "Unknown",
-            # Common variations
-            "sales": "Sales_Inquiry",
-            "support": "Support_Request",
-            "billing": "Billing_Issue",
-            "hr": "HR_Inquiry",
-            "partnership": "Partnership_Offer",
-            "feedback": "General_Feedback"
+            "spam": "spam",
+            "promotion": "marketing",
+            "social": "marketing",
+            "important": "customer_support",
+            "work": "hr",
+            "general": "customer_support",
+            "updates": "it",
+            "sales": "sales",
+            "support": "customer_support",
+            "customer support": "customer_support",
+            "billing": "finance",
+            "hr": "hr",
+            "partnership": "sales",
+            "feedback": "customer_support",
+            "technical": "it",
+            "finance": "finance",
+            "marketing": "marketing",
+            "it": "it"
         }
         
-        category = result.get("category", "unknown")
-        mapped = category_map.get(category.lower(), category)
+        category = result.get("category", "unknown").lower()
+        mapped = category_map.get(category, "customer_support") # Default to customer_support if unknown
         
-        # Capitalize first letter if needed
-        if mapped and mapped[0].islower():
-            mapped = mapped.capitalize()
-        
+        if mapped not in VALID_CATEGORIES:
+            mapped = "customer_support"
+            
         result["category"] = mapped
+        
+        # Keep probability keys consistent if needed, but not strictly necessary for this app's main logic
         result.setdefault("urgency", "Medium")
         result.setdefault("sentiment", "Neutral")
         result.setdefault("keywords", [])
